@@ -38,8 +38,7 @@ const OfferScreen: React.FC = () => {
             <main className="flex-grow flex flex-col lg:flex-row items-center justify-center px-6 lg:px-20 gap-12 lg:gap-20 py-12">
                 <div className="flex flex-col items-center text-center lg:items-center max-w-3xl -mt-10 md:-mt-20">
                     <img src={logo} alt="Offer Logo" className="w-64 md:w-80 mb-6 object-contain animate-logo-glow" />
-                    <h1 className="headline-font text-5xl md:text-7xl font-bold mb-8 text-brand-blue leading-tight" dangerouslySetInnerHTML={{ __html: title.replace(/\n/g, '<br/>') }}>
-                    </h1>
+
 
                     {/* Pricing */}
                     <div className="flex flex-col md:flex-row items-center gap-8 mt-12 animate-pulse-slow">
@@ -63,11 +62,14 @@ const OfferScreen: React.FC = () => {
 
                 {/* Right Section: Jackpot Highlight */}
                 <div className="hidden lg:flex flex-col items-start border-l-4 border-brand-red pl-16 py-10">
+                    <div className="text-xl md:text-3xl font-bold text-brand-blue-light uppercase tracking-widest mb-[-1rem] ml-2">
+                        Ramadan Special
+                    </div>
                     <div className="headline-font text-[8rem] xl:text-[10rem] leading-none font-black text-brand-blue drop-shadow-2xl select-none animate-glow">
                         JACK<span className="text-brand-red">POT</span>
                     </div>
-                    <div className="text-6xl xl:text-8xl font-black text-brand-red mt-[-1rem] tracking-tighter">
-                        150 HOURS
+                    <div className="text-4xl xl:text-6xl font-black text-brand-red -mt-4 tracking-[0.2em] ml-2">
+                        OFFER
                     </div>
                     <div className="mt-8">
                         <CountdownTimer targetDate={targetDate} />
