@@ -24,6 +24,7 @@
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'fade-in': 'fadeIn 1s ease-out forwards',
                         'glow': 'pulse-glow 4s ease-in-out infinite',
+                        'logo-glow': 'logoGlow 3s ease-in-out infinite',
                     },
                     keyframes: {
                         fadeIn: {
@@ -33,6 +34,10 @@
                         'pulse-glow': {
                             '0%, 100%': { textShadow: '0 0 20px rgba(15, 23, 42, 0.2)', transform: 'scale(1)' },
                             '50%': { textShadow: '0 0 40px rgba(225, 29, 72, 0.4)', transform: 'scale(1.02)' },
+                        },
+                        logoGlow: {
+                            '0%, 100%': { filter: 'drop-shadow(0 0 10px rgba(225, 29, 72, 0.2))', transform: 'translateY(0)' },
+                            '50%': { filter: 'drop-shadow(0 0 25px rgba(225, 29, 72, 0.6))', transform: 'translateY(-10px)' },
                         }
                     }
                 }
