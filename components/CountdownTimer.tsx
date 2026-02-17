@@ -85,7 +85,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime }) =
   const getLabelColor = () => {
     if (status === 'upcoming') return 'text-brand-blue';
     if (isLastHours) return 'text-red-600 animate-pulse';
-    return 'text-green-600'; // Soft Green for normal active
+    return 'text-brand-red'; // Red for normal active as requested
   };
 
   const getBoxBorderColor = () => {
