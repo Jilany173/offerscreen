@@ -1,0 +1,104 @@
+import { supabase } from '../src/lib/supabaseClient';
+
+export interface ThemeSettings {
+    id?: string;
+    name?: string; // e.g. "Default Theme", "Ramadan Theme"
+    header_text_1: string; // e.g. "Ramadan Special"
+    header_text_2: string; // e.g. "150 Hours"
+    background_style: string; // 'default' or 'theme-2'
+    is_active: boolean;
+}
+
+// Fetch the single active theme for the Offer Screen
+export const fetchActiveTheme = async (): Promise<ThemeSettings | null> => {
+    const { data, error } = await supabase
+        .from('themes')
+        .select('*')
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+    if (error) {
+        // Return default if no active theme found
+        return {
+            header_text_1: 'Ramadan Special',
+            header_text_2: '150 Hours',
+            background_style: 'default',
+            is_active: true
+        };
+    }
+    return data;
+};
+
+// Fetch ALL themes for the Admin Panel list
+export const fetchAllThemes = async (): Promise<ThemeSettings[]> => {
+    const { data, error } = await supabase
+        .from('themes')
+        .select('*')
+        .order('id', { ascending: true });
+
+    if (error) {
+        console.error("Error fetching themes:", error);
+        return [];
+    }
+    return data || [];
+};
+
+// Create a new theme
+export const createTheme = async (theme: ThemeSettings): Promise<ThemeSettings | null> => {
+    const { data, error } = await supabase
+        .from('themes')
+        .insert([{
+            header_text_1: theme.header_text_1,
+            header_text_2: theme.header_text_2,
+            background_style: theme.background_style,
+            is_active: false // Default to inactive when creating
+        }])
+        .select()
+        .single();
+
+    if (error) {
+        console.error("Error creating theme:", error);
+        return null;
+    }
+    return data;
+};
+
+// Update an existing theme
+export const updateTheme = async (id: string, updates: Partial<ThemeSettings>): Promise<ThemeSettings | null> => {
+    const { data, error } = await supabase
+        .from('themes')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) {
+        console.error("Error updating theme:", error);
+        return null;
+    }
+    return data;
+};
+
+// Delete a theme
+export const deleteTheme = async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+        .from('themes')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error deleting theme:", error);
+        return false;
+    }
+    return true;
+};
+
+// Set a specific theme as ACTIVE (and deactivate others)
+export const setActiveTheme = async (id: string): Promise<void> => {
+    // 1. Deactivate all
+    await supabase.from('themes').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000'); // hacky catch-all
+
+    // 2. Activate specific
+    await supabase.from('themes').update({ is_active: true }).eq('id', id);
+};

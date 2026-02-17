@@ -3,6 +3,7 @@ export interface TimerState {
   hours: string;
   minutes: string;
   seconds: string;
+  milliseconds: string;
   ended: boolean;
 }
 
@@ -11,12 +12,24 @@ export interface ChatMessage {
   text: string;
 }
 
-export interface Offer {
+export interface Course {
   id: string;
+  offer_id: string;
   title: string;
   original_price: number;
   discounted_price: number;
+}
+
+export interface Offer {
+  id: string;
+  title: string; // Campaign Title (e.g. "Ramadan Special")
+  start_time: string; // ISO string
   end_time: string; // ISO string
-  description?: string;
   is_active: boolean;
+  description?: string;
+  courses?: Course[];
+}
+
+export interface OfferWithCourses extends Offer {
+  courses: Course[];
 }
