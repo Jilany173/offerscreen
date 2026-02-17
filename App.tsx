@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import logo from './src/assets/logo.png';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CountdownTimer from './components/CountdownTimer';
@@ -37,7 +38,7 @@ const App: React.FC = () => {
 
       <main className="flex-grow flex flex-col lg:flex-row items-center justify-center px-6 lg:px-20 gap-12 lg:gap-20 py-12">
         <div className="flex flex-col items-center text-center lg:items-center max-w-3xl">
-          <img src="/logo.png" alt="Offer Logo" className="w-48 md:w-64 mb-6 object-contain" />
+          <img src={logo} alt="Offer Logo" className="w-48 md:w-64 mb-6 object-contain" />
           <h1 className="headline-font text-5xl md:text-7xl font-bold mb-8 text-brand-blue leading-tight" dangerouslySetInnerHTML={{ __html: title.replace(/\n/g, '<br/>') }}>
           </h1>
 
