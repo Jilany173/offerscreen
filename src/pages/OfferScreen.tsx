@@ -41,21 +41,28 @@ const OfferScreen: React.FC = () => {
 
 
                     {/* Pricing */}
-                    <div className="flex flex-col md:flex-row items-center gap-8 mt-12 animate-pulse-slow">
-                        <div className="text-2xl md:text-3xl line-through decoration-4 text-slate-400 decoration-slate-300">
-                            Was ${originalPrice}
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <span className="text-brand-red text-6xl md:text-8xl font-black price-shadow italic">
+                    {/* Pricing Card */}
+                    <div className="bg-white border-2 border-brand-blue rounded-3xl p-8 w-full max-w-md shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-blue via-brand-red to-brand-blue"></div>
+
+                        <h2 className="text-2xl md:text-3xl font-bold text-brand-blue mb-6 border-b-2 border-brand-blue/10 pb-4" dangerouslySetInnerHTML={{ __html: title }}></h2>
+
+                        <div className="flex flex-col items-center gap-2 mb-6">
+                            <div className="text-3xl font-bold text-gray-400 line-through decoration-red-500/50 decoration-2">
+                                ${originalPrice}
+                            </div>
+
+                            <div className="bg-brand-red text-white text-5xl md:text-7xl font-black py-4 px-10 rounded-2xl shadow-lg transform scale-100 group-hover:scale-105 transition-transform">
                                 ${discountedPrice}
-                            </span>
-                            <span className="text-sm md:text-lg uppercase tracking-[0.4em] mt-2 font-semibold text-brand-blue text-center">
-                                Limited Enrollment
-                            </span>
+                            </div>
+
+                            <div className="mt-4 text-sm font-bold text-brand-blue tracking-widest uppercase">
+                                Limited Slots Available
+                            </div>
                         </div>
                     </div>
 
-                    <button className="mt-10 px-8 py-4 bg-brand-red text-white text-xl font-bold rounded-full hover:bg-red-700 transition-all transform hover:scale-105 shadow-xl">
+                    <button className="mt-8 px-10 py-5 bg-brand-blue text-white text-2xl font-bold rounded-full hover:bg-brand-red transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl border-4 border-transparent hover:border-brand-blue/20">
                         Claim Your Spot Now
                     </button>
                 </div>
