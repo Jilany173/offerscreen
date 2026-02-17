@@ -26,13 +26,12 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
         return;
       }
 
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const hours = Math.floor(distance / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
       setTimeLeft({
-        days: String(days).padStart(2, '0'),
+        days: '00', // Not used
         hours: String(hours).padStart(2, '0'),
         minutes: String(minutes).padStart(2, '0'),
         seconds: String(seconds).padStart(2, '0'),
@@ -60,7 +59,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
 
   return (
     <div className="flex flex-wrap justify-center lg:justify-start gap-3 md:gap-5 mt-4">
-      <Box value={timeLeft.days} label="Days" />
+
       <Box value={timeLeft.hours} label="Hours" />
       <Box value={timeLeft.minutes} label="Minutes" />
       <Box value={timeLeft.seconds} label="Seconds" />
