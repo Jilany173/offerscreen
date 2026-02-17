@@ -18,6 +18,7 @@ export interface Course {
   title: string;
   original_price: number;
   discounted_price: number;
+  sort_order?: number;
 }
 
 export interface Offer {

@@ -506,14 +506,33 @@ const AdminPanel: React.FC = () => {
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody className="divide-y divide-gray-100">
-                                                                    {courses[offer.id]?.map(course => (
-                                                                        <tr key={course.id} className="hover:bg-gray-50">
+                                                                    {courses[offer.id]?.map((course, idx) => (
+                                                                        <tr key={course.id} className="hover:bg-gray-50 border-b last:border-0 border-gray-100 transition-colors">
                                                                             <td className="p-2 pl-4 font-medium text-gray-800">{course.title}</td>
                                                                             <td className="p-2 text-gray-400 line-through">৳{course.original_price}</td>
                                                                             <td className="p-2 font-bold text-green-600">৳{course.discounted_price}</td>
                                                                             <td className="p-2 text-right pr-4">
-                                                                                <button onClick={() => setEditingCourse(course)} className="text-indigo-600 hover:text-indigo-800 mr-3 font-medium">Edit</button>
-                                                                                <button onClick={() => handleDeleteCourse(course.id, offer.id)} className="text-red-500 hover:text-red-700 font-medium">Delete</button>
+                                                                                <div className="flex items-center justify-end gap-2">
+                                                                                    <button
+                                                                                        onClick={() => handleMoveCourse(offer.id, idx, 'up')}
+                                                                                        disabled={idx === 0}
+                                                                                        className={`p-1 rounded text-xs transition-colors ${idx === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-100'}`}
+                                                                                        title="Move Up"
+                                                                                    >
+                                                                                        ⬆️
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => handleMoveCourse(offer.id, idx, 'down')}
+                                                                                        disabled={idx === (courses[offer.id]?.length || 0) - 1}
+                                                                                        className={`p-1 rounded text-xs transition-colors ${idx === (courses[offer.id]?.length || 0) - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-100'}`}
+                                                                                        title="Move Down"
+                                                                                    >
+                                                                                        ⬇️
+                                                                                    </button>
+                                                                                    <div className="h-4 w-px bg-gray-200 mx-1"></div>
+                                                                                    <button onClick={() => setEditingCourse(course)} className="text-indigo-600 hover:text-indigo-800 font-medium text-xs md:text-sm px-2 py-1 rounded hover:bg-indigo-50 transition-colors">Edit</button>
+                                                                                    <button onClick={() => handleDeleteCourse(course.id, offer.id)} className="text-red-500 hover:text-red-700 font-medium text-xs md:text-sm px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
+                                                                                </div>
                                                                             </td>
                                                                         </tr>
                                                                     ))}

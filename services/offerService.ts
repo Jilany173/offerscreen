@@ -49,6 +49,7 @@ export const fetchCoursesForOffer = async (offerId: string): Promise<Course[]> =
         .from('courses')
         .select('*')
         .eq('offer_id', offerId)
+        .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true });
 
     if (error) {
@@ -58,6 +59,32 @@ export const fetchCoursesForOffer = async (offerId: string): Promise<Course[]> =
 
     return data || [];
 }
+
+export const updateCourseOrder = async (courses: Course[]): Promise<boolean> => {
+    // Prepare updates
+    const updates = courses.map((course, index) => ({
+        id: course.id,
+        sort_order: index,
+        // We need to include other required fields or at least the PK to update. 
+        // Ideally we use upsert or multiple updates. 
+        // For simplicity and performance with small lists, we can use `upsert` if we provide all fields, 
+        // OR we can iterate. Since we only want to update sort_order, iteration is safest if we don't have full objects, 
+        // but `courses` passed here should be the full objects from the state.
+    }));
+
+    // Using upsert for batch update if supported well, or individual updates.
+    // Supabase JS upsert works well.
+    const { error } = await supabase
+        .from('courses')
+        .upsert(updates, { onConflict: 'id' });
+
+    if (error) {
+        console.error('Error updating course order:', error);
+        return false;
+    }
+
+    return true;
+};
 
 // --- Offer (Campaign) Management ---
 
