@@ -1,60 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchAllOffers, createOffer, updateOffer, deleteOffer, fetchCoursesForOffer, createCourse, updateCourse, deleteCourse } from '../../services/offerService';
-import { fetchActiveTheme, updateTheme, fetchAllThemes, createTheme, deleteTheme, setActiveTheme, ThemeSettings } from '../../services/themeService';
+import { fetchAllThemes, createTheme, updateTheme, deleteTheme, setActiveTheme, ThemeSettings } from '../../services/themeService';
+import { fetchAllGiftItems, addGiftItem, updateGiftItem, deleteGiftItem, uploadGiftImage, deleteGiftImage, GiftItem } from '../../services/giftService';
 import { Offer, Course } from '../../types';
 
 const AdminPanel: React.FC = () => {
-    // Helper to format date for datetime-local input (YYYY-MM-DDTHH:mm) in LOCAL time
     const toLocalISOString = (date: Date) => {
-        const offset = date.getTimezoneOffset() * 60000; // offset in milliseconds
-        const localISOTime = (new Date(date.getTime() - offset)).toISOString().slice(0, 16);
-        return localISOTime;
+        const offset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - offset).toISOString().slice(0, 16);
     };
 
-    // Campaign State
+    // --- State ---
+    const [activeTab, setActiveTab] = useState<'campaigns' | 'theme' | 'gifts'>('campaigns');
+    const [loading, setLoading] = useState(true);
+
+    // Campaign state
     const [offers, setOffers] = useState<Offer[]>([]);
     const [courses, setCourses] = useState<Record<string, Course[]>>({});
-    const [loading, setLoading] = useState(true);
     const [editingOffer, setEditingOffer] = useState<Partial<Offer> | null>(null);
     const [expandedOfferId, setExpandedOfferId] = useState<string | null>(null);
     const [editingCourse, setEditingCourse] = useState<Partial<Course> | null>(null);
 
-    // Theme State
-    const [activeTab, setActiveTab] = useState<'campaigns' | 'theme'>('campaigns');
+    // Theme state
     const [allThemes, setAllThemes] = useState<ThemeSettings[]>([]);
     const [editingTheme, setEditingTheme] = useState<ThemeSettings | null>(null);
     const [isCreatingTheme, setIsCreatingTheme] = useState(false);
 
-    useEffect(() => {
-        loadData();
-    }, []);
+    // Gift state
+    const [gifts, setGifts] = useState<GiftItem[]>([]);
+    const [editingGift, setEditingGift] = useState<Partial<GiftItem> | null>(null);
+    const [giftImageFile, setGiftImageFile] = useState<File | null>(null);
+    const [giftImagePreview, setGiftImagePreview] = useState<string | null>(null);
+    const [giftSaving, setGiftSaving] = useState(false);
+    const giftFileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => { loadData(); }, []);
 
     const loadData = async () => {
         setLoading(true);
-        await Promise.all([loadOffers(), loadThemes()]);
+        await Promise.all([loadOffers(), loadThemes(), loadGifts()]);
         setLoading(false);
     };
 
-    const loadOffers = async () => {
-        const data = await fetchAllOffers();
-        setOffers(data);
-    };
+    // --- Loaders ---
+    const loadOffers = async () => setOffers(await fetchAllOffers());
+    const loadThemes = async () => setAllThemes(await fetchAllThemes());
+    const loadGifts = async () => setGifts(await fetchAllGiftItems());
 
-    const loadThemes = async () => {
-        const themes = await fetchAllThemes();
-        setAllThemes(themes);
+    const refreshCourses = async (offerId: string) => {
+        const offerCourses = await fetchCoursesForOffer(offerId);
+        setCourses(prev => ({ ...prev, [offerId]: offerCourses }));
     };
 
     // --- Campaign Handlers ---
-
     const handleCreateOrUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingOffer) return;
-
         if (editingOffer.id) {
             await updateOffer(editingOffer.id, editingOffer);
         } else {
-            // @ts-ignore - ID is auto-generated
+            // @ts-ignore
             await createOffer(editingOffer);
         }
         setEditingOffer(null);
@@ -66,20 +71,6 @@ const AdminPanel: React.FC = () => {
             await deleteOffer(id);
             loadOffers();
         }
-    };
-
-    const handleAddNew = () => {
-        setEditingOffer({
-            title: '',
-            start_time: new Date().toISOString(),
-            end_time: new Date(Date.now() + 86400000).toISOString(),
-            is_active: false,
-            description: ''
-        });
-    };
-
-    const handleEdit = (offer: Offer) => {
-        setEditingOffer(offer);
     };
 
     const handleSetActive = async (id: string) => {
@@ -103,16 +94,9 @@ const AdminPanel: React.FC = () => {
     };
 
     // --- Course Handlers ---
-
-    const refreshCourses = async (offerId: string) => {
-        const offerCourses = await fetchCoursesForOffer(offerId);
-        setCourses(prev => ({ ...prev, [offerId]: offerCourses }));
-    }
-
     const handleCreateOrUpdateCourse = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingCourse || !editingCourse.offer_id) return;
-
         if (editingCourse.id) {
             await updateCourse(editingCourse.id, editingCourse);
         } else {
@@ -128,30 +112,33 @@ const AdminPanel: React.FC = () => {
             await deleteCourse(courseId);
             refreshCourses(offerId);
         }
-    }
+    };
+
+    const handleMoveCourse = async (offerId: string, idx: number, direction: 'up' | 'down') => {
+        const list = [...(courses[offerId] || [])];
+        const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= list.length) return;
+        const a = list[idx];
+        const b = list[swapIdx];
+        await updateCourse(a.id, { sort_order: (b as any).sort_order ?? swapIdx });
+        await updateCourse(b.id, { sort_order: (a as any).sort_order ?? idx });
+        refreshCourses(offerId);
+    };
 
     // --- Theme Handlers ---
-
     const handleAddTheme = () => {
-        setEditingTheme({
-            header_text_1: 'New Theme',
-            header_text_2: '150 Hours',
-            background_style: 'default',
-            is_active: false
-        });
+        setEditingTheme({ header_text_1: 'New Theme', header_text_2: '150 Hours', background_style: 'default', is_active: false });
         setIsCreatingTheme(true);
     };
 
     const handleSaveTheme = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingTheme) return;
-
         if (isCreatingTheme) {
             await createTheme(editingTheme);
         } else if (editingTheme.id) {
             await updateTheme(editingTheme.id, editingTheme);
         }
-
         await loadThemes();
         setEditingTheme(null);
         setIsCreatingTheme(false);
@@ -189,32 +176,32 @@ const AdminPanel: React.FC = () => {
                 >
                     Theme Settings
                 </button>
+                <button
+                    className={`px-6 py-2 font-medium ${activeTab === 'gifts' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('gifts')}
+                >
+                    🎁 Gift Items
+                </button>
             </div>
 
+            {/* ======================== THEME TAB ======================== */}
             {activeTab === 'theme' && (
                 <div>
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold text-gray-800">Theme Library</h2>
-                        <button
-                            onClick={handleAddTheme}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium flex items-center gap-2"
-                        >
+                        <button onClick={handleAddTheme} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
                             + Add New Theme
                         </button>
                     </div>
 
-                    {/* Theme List */}
                     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10">
                         {allThemes.map((theme) => (
                             <div key={theme.id} className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${theme.is_active ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100 hover:border-gray-300'}`}>
                                 <div className={`h-32 w-full flex items-center justify-center relative ${theme.background_style === 'theme-2' ? 'bg-gray-800' : 'bg-brand-blue/5'}`}>
                                     {theme.background_style === 'theme-2' && <img src="/bg-theme-2.png" alt="Theme 2" className="absolute inset-0 w-full h-full object-cover opacity-50" />}
                                     {theme.background_style === 'default' && <div className="text-gray-400 font-medium">Default Pattern</div>}
-
                                     {theme.is_active && (
-                                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                                            ACTIVE
-                                        </div>
+                                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">ACTIVE</div>
                                     )}
                                 </div>
                                 <div className="p-5">
@@ -222,27 +209,17 @@ const AdminPanel: React.FC = () => {
                                         <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{theme.header_text_1 || "Untitled"}</h3>
                                         <p className="text-sm text-gray-500">{theme.header_text_2}</p>
                                     </div>
-
                                     <div className="flex gap-2 mt-4">
                                         {!theme.is_active && (
-                                            <button
-                                                onClick={() => handleActivateTheme(theme.id!)}
-                                                className="flex-1 py-2 text-sm font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded-lg"
-                                            >
+                                            <button onClick={() => handleActivateTheme(theme.id!)} className="flex-1 py-2 text-sm font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded-lg">
                                                 Activate
                                             </button>
                                         )}
-                                        <button
-                                            onClick={() => setEditingTheme(theme)}
-                                            className="flex-1 py-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg"
-                                        >
+                                        <button onClick={() => setEditingTheme(theme)} className="flex-1 py-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg">
                                             Edit
                                         </button>
                                         {!theme.is_active && (
-                                            <button
-                                                onClick={() => handleDeleteTheme(theme.id!)}
-                                                className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg"
-                                            >
+                                            <button onClick={() => handleDeleteTheme(theme.id!)} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg">
                                                 🗑️
                                             </button>
                                         )}
@@ -259,14 +236,10 @@ const AdminPanel: React.FC = () => {
                                 <button
                                     onClick={() => { setEditingTheme(null); setIsCreatingTheme(false); }}
                                     className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                                >
-                                    ✕
-                                </button>
-
+                                >✕</button>
                                 <h2 className="text-2xl font-bold mb-6 text-gray-800">
                                     {isCreatingTheme ? 'Create New Theme' : 'Edit Theme'}
                                 </h2>
-
                                 <form onSubmit={handleSaveTheme} className="space-y-6">
                                     <div>
                                         <label className="block text-sm font-bold text-gray-700 mb-2">Top Header Text</label>
@@ -274,38 +247,44 @@ const AdminPanel: React.FC = () => {
                                             type="text"
                                             value={editingTheme?.header_text_1 || ''}
                                             onChange={(e) => setEditingTheme(prev => ({ ...prev!, header_text_1: e.target.value }))}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue focus:border-transparent outline-none transition-all placeholder-gray-400 text-gray-800"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
                                             placeholder="e.g. Ramadan Special"
                                         />
                                     </div>
-
                                     <div>
                                         <label className="block text-sm font-bold text-gray-700 mb-2">Highlighted Text (Animated)</label>
                                         <input
                                             type="text"
                                             value={editingTheme?.header_text_2 || ''}
                                             onChange={(e) => setEditingTheme(prev => ({ ...prev!, header_text_2: e.target.value }))}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue focus:border-transparent outline-none transition-all placeholder-gray-400 text-gray-800"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
                                             placeholder="e.g. 150 Hours"
                                         />
                                     </div>
-
                                     <div>
                                         <label className="block text-sm font-bold text-gray-700 mb-2">Background Style</label>
                                         <select
                                             value={editingTheme?.background_style || 'default'}
                                             onChange={(e) => setEditingTheme(prev => ({ ...prev!, background_style: e.target.value }))}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none bg-white font-medium text-gray-700"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700"
                                         >
                                             <option value="default">Default (Blue Grid Pattern)</option>
                                             <option value="theme-2">Theme 2 (Ramadan Image)</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Countdown Language</label>
+                                        <select
+                                            value={editingTheme?.timer_language || 'bn'}
+                                            onChange={(e) => setEditingTheme(prev => ({ ...prev!, timer_language: e.target.value as 'en' | 'bn' }))}
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700"
+                                        >
+                                            <option value="bn">Bengali (বাংলা)</option>
+                                            <option value="en">English</option>
+                                        </select>
+                                    </div>
 
-                                    <button
-                                        type="submit"
-                                        className="w-full py-4 bg-brand-blue text-white rounded-xl font-bold text-lg hover:bg-brand-red transition-colors shadow-lg mt-4"
-                                    >
+                                    <button type="submit" className="w-full py-4 bg-brand-blue text-white rounded-xl font-bold text-lg hover:bg-brand-red transition-colors shadow-lg mt-4">
                                         {isCreatingTheme ? 'Create Theme' : 'Save Changes'}
                                     </button>
                                 </form>
@@ -315,11 +294,12 @@ const AdminPanel: React.FC = () => {
                 </div>
             )}
 
+            {/* ======================== CAMPAIGNS TAB ======================== */}
             {activeTab === 'campaigns' && (
                 <>
                     {!editingOffer && (
                         <button
-                            onClick={handleAddNew}
+                            onClick={() => setEditingOffer({ title: '', start_time: new Date().toISOString(), end_time: new Date(Date.now() + 86400000).toISOString(), is_active: false, description: '' })}
                             className="bg-blue-600 text-white px-4 py-2 rounded mb-6 hover:bg-blue-700"
                         >
                             + Create New Campaign
@@ -332,39 +312,21 @@ const AdminPanel: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block mb-1 font-semibold">Campaign Title</label>
-                                    <input
-                                        className="w-full border p-2 rounded"
-                                        value={editingOffer.title || ''}
-                                        onChange={e => setEditingOffer({ ...editingOffer, title: e.target.value })}
-                                        required
-                                    />
+                                    <input className="w-full border p-2 rounded" value={editingOffer.title || ''} onChange={e => setEditingOffer({ ...editingOffer, title: e.target.value })} required />
                                 </div>
                                 <div>
                                     <label className="block mb-1 font-semibold">Start Time</label>
-                                    <input
-                                        className="w-full border p-2 rounded"
-                                        type="datetime-local"
-                                        value={editingOffer.start_time ? toLocalISOString(new Date(editingOffer.start_time)) : ''}
-                                        onChange={e => setEditingOffer({ ...editingOffer, start_time: new Date(e.target.value).toISOString() })}
-                                        required
-                                    />
+                                    <input className="w-full border p-2 rounded" type="datetime-local" value={editingOffer.start_time ? toLocalISOString(new Date(editingOffer.start_time)) : ''} onChange={e => setEditingOffer({ ...editingOffer, start_time: new Date(e.target.value).toISOString() })} required />
                                 </div>
                                 <div>
                                     <label className="block mb-1 font-semibold">Duration (Hours)</label>
                                     <input
-                                        className="w-full border p-2 rounded"
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        placeholder="e.g. 150"
-                                        value={editingOffer.start_time && editingOffer.end_time ?
-                                            ((new Date(editingOffer.end_time).getTime() - new Date(editingOffer.start_time).getTime()) / 3600000).toFixed(1)
-                                            : ''}
+                                        className="w-full border p-2 rounded" type="number" min="0" step="0.5" placeholder="e.g. 150"
+                                        value={editingOffer.start_time && editingOffer.end_time ? ((new Date(editingOffer.end_time).getTime() - new Date(editingOffer.start_time).getTime()) / 3600000).toFixed(1) : ''}
                                         onChange={e => {
                                             const hours = parseFloat(e.target.value);
                                             if (!isNaN(hours) && editingOffer.start_time) {
-                                                const start = new Date(editingOffer.start_time);
-                                                const end = new Date(start.getTime() + (hours * 3600000));
+                                                const end = new Date(new Date(editingOffer.start_time).getTime() + (hours * 3600000));
                                                 setEditingOffer({ ...editingOffer, end_time: end.toISOString() });
                                             }
                                         }}
@@ -372,29 +334,14 @@ const AdminPanel: React.FC = () => {
                                 </div>
                                 <div>
                                     <label className="block mb-1 font-semibold">End Time</label>
-                                    <input
-                                        className="w-full border p-2 rounded"
-                                        type="datetime-local"
-                                        value={editingOffer.end_time ? toLocalISOString(new Date(editingOffer.end_time)) : ''}
-                                        onChange={e => setEditingOffer({ ...editingOffer, end_time: new Date(e.target.value).toISOString() })}
-                                        required
-                                    />
+                                    <input className="w-full border p-2 rounded" type="datetime-local" value={editingOffer.end_time ? toLocalISOString(new Date(editingOffer.end_time)) : ''} onChange={e => setEditingOffer({ ...editingOffer, end_time: new Date(e.target.value).toISOString() })} required />
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="block mb-1">Description</label>
-                                    <textarea
-                                        className="w-full border p-2 rounded"
-                                        value={editingOffer.description || ''}
-                                        onChange={e => setEditingOffer({ ...editingOffer, description: e.target.value })}
-                                    />
+                                    <textarea className="w-full border p-2 rounded" value={editingOffer.description || ''} onChange={e => setEditingOffer({ ...editingOffer, description: e.target.value })} />
                                 </div>
                                 <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        className="mr-2 h-5 w-5"
-                                        checked={editingOffer.is_active || false}
-                                        onChange={e => setEditingOffer({ ...editingOffer, is_active: e.target.checked })}
-                                    />
+                                    <input type="checkbox" className="mr-2 h-5 w-5" checked={editingOffer.is_active || false} onChange={e => setEditingOffer({ ...editingOffer, is_active: e.target.checked })} />
                                     <label>Is Active</label>
                                 </div>
                             </div>
@@ -430,13 +377,10 @@ const AdminPanel: React.FC = () => {
                                             </td>
                                             <td className="border p-2 text-center">
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => toggleExpandOffer(offer.id)}
-                                                        className="bg-indigo-500 text-white px-3 py-1 rounded text-xs hover:bg-indigo-600 transition-colors"
-                                                    >
+                                                    <button onClick={() => toggleExpandOffer(offer.id)} className="bg-indigo-500 text-white px-3 py-1 rounded text-xs hover:bg-indigo-600 transition-colors">
                                                         {expandedOfferId === offer.id ? 'Close' : 'Courses'}
                                                     </button>
-                                                    <button onClick={() => handleEdit(offer)} className="bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600 transition-colors">Edit</button>
+                                                    <button onClick={() => setEditingOffer(offer)} className="bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600 transition-colors">Edit</button>
                                                     <button onClick={() => handleDelete(offer.id)} className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors">Delete</button>
                                                 </div>
                                             </td>
@@ -459,34 +403,15 @@ const AdminPanel: React.FC = () => {
                                                             )}
                                                         </div>
 
-                                                        {/* Course Edit Form */}
                                                         {editingCourse && editingCourse.offer_id === offer.id && (
                                                             <form onSubmit={handleCreateOrUpdateCourse} className="mb-4 p-4 bg-white rounded shadow-sm border border-indigo-200">
                                                                 <h5 className="font-bold mb-3 text-sm text-gray-700 uppercase tracking-wide">{editingCourse.id ? 'Edit Course' : 'Add New Course'}</h5>
                                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                                                     <div className="md:col-span-2">
-                                                                        <input
-                                                                            placeholder="Course Title"
-                                                                            className="w-full border p-2 rounded text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                                                                            value={editingCourse.title || ''}
-                                                                            onChange={e => setEditingCourse({ ...editingCourse, title: e.target.value })}
-                                                                            required
-                                                                        />
+                                                                        <input placeholder="Course Title" className="w-full border p-2 rounded text-sm outline-none" value={editingCourse.title || ''} onChange={e => setEditingCourse({ ...editingCourse, title: e.target.value })} required />
                                                                     </div>
-                                                                    <input
-                                                                        type="number" placeholder="Original Price"
-                                                                        className="border p-2 rounded text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                                                                        value={editingCourse.original_price || ''}
-                                                                        onChange={e => setEditingCourse({ ...editingCourse, original_price: Number(e.target.value) })}
-                                                                        required
-                                                                    />
-                                                                    <input
-                                                                        type="number" placeholder="Discounted Price"
-                                                                        className="border p-2 rounded text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                                                                        value={editingCourse.discounted_price || ''}
-                                                                        onChange={e => setEditingCourse({ ...editingCourse, discounted_price: Number(e.target.value) })}
-                                                                        required
-                                                                    />
+                                                                    <input type="number" placeholder="Original Price" className="border p-2 rounded text-sm outline-none" value={editingCourse.original_price || ''} onChange={e => setEditingCourse({ ...editingCourse, original_price: Number(e.target.value) })} required />
+                                                                    <input type="number" placeholder="Discounted Price" className="border p-2 rounded text-sm outline-none" value={editingCourse.discounted_price || ''} onChange={e => setEditingCourse({ ...editingCourse, discounted_price: Number(e.target.value) })} required />
                                                                 </div>
                                                                 <div className="mt-3 flex gap-2 justify-end">
                                                                     <button type="button" onClick={() => setEditingCourse(null)} className="text-gray-500 px-4 py-1 rounded text-sm hover:text-gray-700">Cancel</button>
@@ -507,40 +432,24 @@ const AdminPanel: React.FC = () => {
                                                                 </thead>
                                                                 <tbody className="divide-y divide-gray-100">
                                                                     {courses[offer.id]?.map((course, idx) => (
-                                                                        <tr key={course.id} className="hover:bg-gray-50 border-b last:border-0 border-gray-100 transition-colors">
+                                                                        <tr key={course.id} className="hover:bg-gray-50 transition-colors">
                                                                             <td className="p-2 pl-4 font-medium text-gray-800">{course.title}</td>
                                                                             <td className="p-2 text-gray-400 line-through">৳{course.original_price}</td>
                                                                             <td className="p-2 font-bold text-green-600">৳{course.discounted_price}</td>
                                                                             <td className="p-2 text-right pr-4">
                                                                                 <div className="flex items-center justify-end gap-2">
-                                                                                    <button
-                                                                                        onClick={() => handleMoveCourse(offer.id, idx, 'up')}
-                                                                                        disabled={idx === 0}
-                                                                                        className={`p-1 rounded text-xs transition-colors ${idx === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-100'}`}
-                                                                                        title="Move Up"
-                                                                                    >
-                                                                                        ⬆️
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={() => handleMoveCourse(offer.id, idx, 'down')}
-                                                                                        disabled={idx === (courses[offer.id]?.length || 0) - 1}
-                                                                                        className={`p-1 rounded text-xs transition-colors ${idx === (courses[offer.id]?.length || 0) - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-100'}`}
-                                                                                        title="Move Down"
-                                                                                    >
-                                                                                        ⬇️
-                                                                                    </button>
+                                                                                    <button onClick={() => handleMoveCourse(offer.id, idx, 'up')} disabled={idx === 0} className={`p-1 rounded text-xs ${idx === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-100'}`} title="Move Up">⬆️</button>
+                                                                                    <button onClick={() => handleMoveCourse(offer.id, idx, 'down')} disabled={idx === (courses[offer.id]?.length || 0) - 1} className={`p-1 rounded text-xs ${idx === (courses[offer.id]?.length || 0) - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-100'}`} title="Move Down">⬇️</button>
                                                                                     <div className="h-4 w-px bg-gray-200 mx-1"></div>
-                                                                                    <button onClick={() => setEditingCourse(course)} className="text-indigo-600 hover:text-indigo-800 font-medium text-xs md:text-sm px-2 py-1 rounded hover:bg-indigo-50 transition-colors">Edit</button>
-                                                                                    <button onClick={() => handleDeleteCourse(course.id, offer.id)} className="text-red-500 hover:text-red-700 font-medium text-xs md:text-sm px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
+                                                                                    <button onClick={() => setEditingCourse(course)} className="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-2 py-1 rounded hover:bg-indigo-50 transition-colors">Edit</button>
+                                                                                    <button onClick={() => handleDeleteCourse(course.id, offer.id)} className="text-red-500 hover:text-red-700 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
                                                                                 </div>
                                                                             </td>
                                                                         </tr>
                                                                     ))}
                                                                     {(!courses[offer.id] || courses[offer.id].length === 0) && (
                                                                         <tr>
-                                                                            <td colSpan={4} className="p-6 text-center text-gray-400 italic">
-                                                                                No courses added to this campaign yet.
-                                                                            </td>
+                                                                            <td colSpan={4} className="p-6 text-center text-gray-400 italic">No courses added to this campaign yet.</td>
                                                                         </tr>
                                                                     )}
                                                                 </tbody>
@@ -561,9 +470,181 @@ const AdminPanel: React.FC = () => {
                         </table>
                     </div>
                 </>
-            )
-            }
-        </div >
+            )}
+
+            {/* ======================== GIFTS TAB ======================== */}
+            {activeTab === 'gifts' && (
+                <div>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-800">Gift Items</h2>
+                        <button
+                            onClick={() => {
+                                setEditingGift({ name: '', emoji: '🎁', is_visible: true, sort_order: gifts.length + 1 });
+                                setGiftImageFile(null);
+                                setGiftImagePreview(null);
+                            }}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                        >
+                            + Add Gift Item
+                        </button>
+                    </div>
+
+                    {/* Gift Form Modal */}
+                    {editingGift && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl relative">
+                                <button
+                                    onClick={() => { setEditingGift(null); setGiftImageFile(null); setGiftImagePreview(null); }}
+                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+                                >✕</button>
+                                <h2 className="text-xl font-bold mb-6 text-gray-800">
+                                    {editingGift.id ? 'Edit Gift Item' : 'New Gift Item'}
+                                </h2>
+                                <form
+                                    onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        setGiftSaving(true);
+                                        let imageUrl = editingGift.image_url;
+                                        if (giftImageFile) {
+                                            const tempId = editingGift.id || crypto.randomUUID();
+                                            imageUrl = await uploadGiftImage(giftImageFile, tempId) || undefined;
+                                        }
+                                        const payload = { ...editingGift, image_url: imageUrl } as GiftItem;
+                                        if (editingGift.id) {
+                                            await updateGiftItem(editingGift.id, payload);
+                                        } else {
+                                            await addGiftItem({
+                                                name: payload.name || '',
+                                                emoji: payload.emoji || '🎁',
+                                                image_url: payload.image_url,
+                                                is_visible: payload.is_visible ?? true,
+                                                sort_order: payload.sort_order || 0,
+                                            });
+                                        }
+                                        setEditingGift(null);
+                                        setGiftImageFile(null);
+                                        setGiftImagePreview(null);
+                                        setGiftSaving(false);
+                                        loadGifts();
+                                    }}
+                                    className="space-y-4"
+                                >
+                                    {/* Image Upload */}
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">গিফটের ছবি (ঐচ্ছিক)</label>
+                                        <div className="flex items-center gap-4">
+                                            <div
+                                                className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-indigo-400 transition-colors bg-gray-50"
+                                                onClick={() => giftFileInputRef.current?.click()}
+                                            >
+                                                {giftImagePreview || editingGift.image_url ? (
+                                                    <img src={giftImagePreview || editingGift.image_url} alt="preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-3xl">{editingGift.emoji || '🎁'}</span>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <button type="button" onClick={() => giftFileInputRef.current?.click()} className="w-full py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+                                                    📁 ছবি আপলোড করুন
+                                                </button>
+                                                {(giftImagePreview || editingGift.image_url) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setGiftImageFile(null); setGiftImagePreview(null); setEditingGift(prev => prev ? { ...prev, image_url: undefined } : null); }}
+                                                        className="w-full mt-1 py-1 text-xs text-red-500 hover:text-red-700"
+                                                    >
+                                                        🗑️ ছবি সরান
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <input ref={giftFileInputRef} type="file" accept="image/*" className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) { setGiftImageFile(file); setGiftImagePreview(URL.createObjectURL(file)); }
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">গিফটের নাম *</label>
+                                            <input type="text" required value={editingGift.name || ''} onChange={e => setEditingGift(prev => ({ ...prev!, name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" placeholder="স্মার্টফোন" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">ইমোজি</label>
+                                            <input type="text" value={editingGift.emoji || '🎁'} onChange={e => setEditingGift(prev => ({ ...prev!, emoji: e.target.value }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" placeholder="🎁" />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">সর্ট অর্ডার</label>
+                                            <input type="number" value={editingGift.sort_order || 0} onChange={e => setEditingGift(prev => ({ ...prev!, sort_order: Number(e.target.value) }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" />
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-6">
+                                            <input type="checkbox" id="gift-visible" checked={editingGift.is_visible ?? true} onChange={e => setEditingGift(prev => ({ ...prev!, is_visible: e.target.checked }))} className="h-5 w-5" />
+                                            <label htmlFor="gift-visible" className="text-sm font-bold text-gray-700">স্ক্রিনে দেখাবে</label>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" disabled={giftSaving} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition disabled:opacity-50 mt-4">
+                                        {giftSaving ? 'সংরক্ষণ করছে...' : (editingGift.id ? 'আপডেট করুন' : 'যোগ করুন')}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Gift Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {gifts.map((gift) => (
+                            <div key={gift.id} className={`bg-white rounded-xl shadow border-2 overflow-hidden transition-all ${gift.is_visible ? 'border-green-200' : 'border-gray-200 opacity-60'}`}>
+                                <div className="h-32 flex items-center justify-center bg-gray-50">
+                                    {gift.image_url ? (
+                                        <img src={gift.image_url} alt={gift.name} className="h-full w-full object-contain p-2" />
+                                    ) : (
+                                        <span className="text-5xl">{gift.emoji}</span>
+                                    )}
+                                </div>
+                                <div className="p-3">
+                                    <p className="font-bold text-sm text-gray-800 text-center truncate font-bengali">{gift.name}</p>
+                                    <p className="text-xs text-center text-gray-400 mt-1">#{gift.sort_order}</p>
+                                    <div className="flex gap-2 mt-3">
+                                        <button
+                                            onClick={async () => { await updateGiftItem(gift.id, { is_visible: !gift.is_visible }); loadGifts(); }}
+                                            className={`flex-1 py-1 rounded text-xs font-bold transition ${gift.is_visible ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                        >
+                                            {gift.is_visible ? '👁 দেখা যায়' : '🚫 লুকানো'}
+                                        </button>
+                                        <button
+                                            onClick={() => { setEditingGift(gift); setGiftImagePreview(null); setGiftImageFile(null); }}
+                                            className="px-2 py-1 rounded text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold"
+                                        >✏️</button>
+                                        <button
+                                            onClick={async () => {
+                                                if (window.confirm(`"${gift.name}" মুছে ফেলবেন?`)) {
+                                                    if (gift.image_url) await deleteGiftImage(gift.image_url);
+                                                    await deleteGiftItem(gift.id);
+                                                    loadGifts();
+                                                }
+                                            }}
+                                            className="px-2 py-1 rounded text-xs bg-red-50 text-red-500 hover:bg-red-100 font-bold"
+                                        >🗑️</button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {gifts.length === 0 && (
+                            <div className="col-span-full text-center py-12 text-gray-400">
+                                কোনো গিফট আইটেম নেই। উপরের বাটনে ক্লিক করে যোগ করুন।
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+        </div>
     );
 };
 

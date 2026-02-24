@@ -5,9 +5,19 @@ import { TimerState } from '../types';
 interface CountdownTimerProps {
   startTime?: string;
   endTime?: string;
+  language?: 'en' | 'bn';
 }
 
-const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime }) => {
+const toBengaliNumber = (n: string) => {
+  const englishToBengaliMap: { [key: string]: string } = {
+    '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪',
+    '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'
+  };
+  return n.split('').map(digit => englishToBengaliMap[digit] || digit).join('');
+};
+
+const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, language = 'bn' }) => {
+
   const [timeLeft, setTimeLeft] = useState<TimerState>({
     days: '00',
     hours: '00',
@@ -96,28 +106,65 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime }) =
 
   const getNumberColor = () => {
     if (status === 'upcoming') return 'text-brand-blue';
-    if (isLastHours) return 'text-red-600';
-    return 'text-green-600';
+    return 'text-[#B45309]'; // Deep Gold
   };
 
-  const Box = ({ value, label }: { value: string; label: string }) => (
-    <div className={`flex flex-col items-center justify-center border-2 rounded-xl md:rounded-3xl p-4 md:p-6 backdrop-blur-sm bg-white/90 shadow-2xl w-24 md:w-40 h-32 md:h-56 transition-colors duration-500 ${getBoxBorderColor()}`}>
-      <span className={`text-5xl md:text-8xl font-bold font-counter ${getNumberColor()} drop-shadow-sm`}>{value}</span>
-      <span className="text-xs md:text-sm uppercase tracking-widest mt-1 text-slate-500 font-bold">{label}</span>
-    </div>
-  );
+  const Box = ({ value, label }: { value: string; label: string }) => {
+    // Dynamic font size based on number of digits and language
+    const isThreeDigits = value.length >= 3;
+
+    let fontSizeClass = '';
+    let fontFamilyClass = '';
+
+    if (language === 'bn') {
+      fontSizeClass = isThreeDigits ? 'text-3xl md:text-5xl' : 'text-4xl md:text-6xl';
+      fontFamilyClass = 'font-bengali font-black';
+    } else {
+      fontSizeClass = isThreeDigits ? 'text-4xl md:text-6xl' : 'text-5xl md:text-7xl';
+      fontFamilyClass = 'font-poppins font-black'; // Poppins ExtraBold/Black
+    }
+
+    return (
+      <div className="flex flex-col items-center">
+        <div className={`flex flex-col items-center justify-center border-4 rounded-xl md:rounded-3xl p-4 md:p-6 backdrop-blur-sm bg-[#FFFDF0] shadow-2xl w-24 md:w-40 h-32 md:h-56 transition-colors duration-500 border-[#B45309]/30`}>
+          <span className={`${fontSizeClass} ${fontFamilyClass} ${getNumberColor()} drop-shadow-md leading-tight text-center flex items-center justify-center`}>
+            {/* Applying inner shadow logic */}
+            <span className={language === 'bn' ? '' : 'inner-shadow-text'}>
+              {value}
+            </span>
+          </span>
+          <span className="text-sm md:text-base uppercase tracking-widest mt-2 text-slate-800 font-extrabold">{label}</span>
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <div className="flex flex-col items-center lg:items-start mt-6">
-      <div className={`text-lg md:text-xl font-bold uppercase tracking-[0.3em] mb-4 ${getLabelColor()}`}>
-        {status === 'upcoming' ? 'Starts In' : 'Ends In'}
+      <div
+        className={`font-bengali text-3xl md:text-4xl font-extrabold tracking-[0.2em] mb-4 ${getLabelColor()}`}
+        style={{ WebkitTextStroke: '0.5px white' }}
+      >
+        {status === 'upcoming' ? 'শুরু হবে......' : 'আর মাত্র......'}
       </div>
-      <div className="flex flex-wrap justify-center lg:justify-start gap-3 md:gap-4">
-        <Box value={timeLeft.hours} label="Hours" />
-        <Box value={timeLeft.minutes} label="Minutes" />
-        <Box value={timeLeft.seconds} label="Seconds" />
-        <Box value={timeLeft.milliseconds} label="Millisec" />
+      <div className="flex flex-wrap items-end justify-center lg:justify-start gap-3 md:gap-11">
+        <Box value={language === 'bn' ? toBengaliNumber(timeLeft.hours) : timeLeft.hours} label="ঘণ্টা" />
+        <Box value={language === 'bn' ? toBengaliNumber(timeLeft.minutes) : timeLeft.minutes} label="মিনিট" />
+        <Box value={language === 'bn' ? toBengaliNumber(timeLeft.seconds) : timeLeft.seconds} label="সেকেন্ড" />
+
+        {/* মিলিসেকেন্ড বক্স */}
+        <Box value={language === 'bn' ? toBengaliNumber(timeLeft.milliseconds) : timeLeft.milliseconds} label="মিলিসেকেন্ড" />
+
+        {/* বাকি টেক্সট */}
+        <div
+          className={`font-bengali text-3xl md:text-5xl font-black mb-4 ${getLabelColor()}`}
+          style={{ WebkitTextStroke: '0.5px white', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
+        >
+          বাকি...
+        </div>
       </div>
+
     </div>
   );
 };

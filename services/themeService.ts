@@ -6,6 +6,7 @@ export interface ThemeSettings {
     header_text_1: string; // e.g. "Ramadan Special"
     header_text_2: string; // e.g. "150 Hours"
     background_style: string; // 'default' or 'theme-2'
+    timer_language?: 'en' | 'bn';
     is_active: boolean;
 }
 
@@ -24,6 +25,7 @@ export const fetchActiveTheme = async (): Promise<ThemeSettings | null> => {
             header_text_1: 'Ramadan Special',
             header_text_2: '150 Hours',
             background_style: 'default',
+            timer_language: 'bn',
             is_active: true
         };
     }
@@ -52,6 +54,7 @@ export const createTheme = async (theme: ThemeSettings): Promise<ThemeSettings |
             header_text_1: theme.header_text_1,
             header_text_2: theme.header_text_2,
             background_style: theme.background_style,
+            timer_language: theme.timer_language || 'bn',
             is_active: false // Default to inactive when creating
         }])
         .select()
