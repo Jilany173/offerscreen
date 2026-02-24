@@ -95,9 +95,6 @@ const OfferScreen: React.FC = () => {
                     <div className="headline-font text-6xl md:text-9xl text-brand-red font-black drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] select-none tracking-tighter">
                         OFFER <span className="text-gray-900">ENDED</span>
                     </div>
-                    <div className="mt-8 font-bengali text-3xl md:text-6xl font-black text-gray-800 tracking-wider">
-                        অফারটি শেষ হয়ে গেছে!
-                    </div>
                     <div className="mt-4 w-32 md:w-64 h-2 bg-brand-red rounded-full opacity-50 animate-pulse"></div>
                 </div>
             </div>
