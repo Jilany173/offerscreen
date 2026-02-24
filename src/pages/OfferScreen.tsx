@@ -128,9 +128,9 @@ const OfferScreen: React.FC = () => {
 
                     <main className="flex-grow flex flex-col lg:flex-row items-center justify-center px-6 lg:px-20 gap-12 lg:gap-20 py-12 relative z-10">
                         {/* Left Section: Pricing Card Container */}
-                        <div className="flex flex-col items-center text-center lg:items-center w-full max-w-[550px] min-h-[550px] justify-center -mt-10 md:-mt-20">
+                        <div className="flex flex-col items-center text-center lg:items-center w-full max-w-[550px] min-h-[550px] justify-center mt-5 md:mt-10">
                             {/* Pricing Card */}
-                            <div key={currentCourseIndex} className="bg-white border-4 border-brand-blue rounded-3xl p-8 w-full max-w-xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 relative overflow-hidden group animate-flip-in">
+                            <div key={currentCourseIndex} className="bg-white border-4 border-brand-blue rounded-3xl pt-10 px-8 pb-16 w-full max-w-xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 relative overflow-hidden group animate-flip-in">
 
 
                                 {/* Course Title (Dynamic) */}
@@ -157,17 +157,30 @@ const OfferScreen: React.FC = () => {
 
                                 {/* Course Indicators */}
                                 {courses.length > 1 && (
-                                    <div className="flex justify-center gap-2 mt-6">
+                                    <div className="flex justify-center gap-2 mt-10">
                                         {courses.map((_, idx) => (
                                             <div
                                                 key={idx}
-                                                className={`h-2 w-2 rounded-full transition-all duration-300 ${idx === currentCourseIndex ? 'bg-brand-red w-6' : 'bg-gray-300'}`}
+                                                className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${idx === currentCourseIndex ? 'bg-brand-red w-8' : 'bg-gray-300'}`}
                                             />
                                         ))}
                                     </div>
                                 )}
                             </div>
 
+                            {/* Relocated Promotional Text - More Eye-Catching & Premium */}
+                            <div className="mt-12 flex flex-col items-center w-full scale-90 md:scale-100 origin-top">
+                                <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white px-10 py-3 rounded-t-2xl shadow-[0_0_15px_rgba(37,99,235,0.4)] border-b border-white/20 w-full max-w-lg flex items-center justify-center relative z-20">
+                                    <h2 className="font-bengali text-lg md:text-2xl font-bold tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] antialiased text-white text-center">
+                                        হেক্সাস জিন্দাবাজারে অফারে শুধু ছাড় নয়
+                                    </h2>
+                                </div>
+                                <div className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white px-12 py-4 rounded-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] w-full max-w-2xl flex items-center justify-center transform -mt-1 border-2 border-white/30 relative z-30 transition-all hover:scale-[1.02] duration-300">
+                                    <h2 className="font-bengali text-xl md:text-3xl font-black tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] antialiased text-white whitespace-nowrap text-center">
+                                        সাথে থাকছে ২০টি+ বিশেষ উপহারের কুপন।
+                                    </h2>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Right Section: Jackpot Highlight */}

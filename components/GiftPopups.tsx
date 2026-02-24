@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchVisibleGiftItems, GiftItem } from '../services/giftService';
+import { fetchPopupGiftItems, GiftItem } from '../services/giftService';
 
 const GiftPopups: React.FC = () => {
     const [visibleGifts, setVisibleGifts] = useState<GiftItem[]>([]);
@@ -8,9 +8,8 @@ const GiftPopups: React.FC = () => {
 
     useEffect(() => {
         const loadGifts = async () => {
-            const items = await fetchVisibleGiftItems();
-            // Take up to 3 special gifts (or all if few)
-            setVisibleGifts(items.slice(0, 3));
+            const items = await fetchPopupGiftItems();
+            setVisibleGifts(items);
         };
         loadGifts();
     }, []);

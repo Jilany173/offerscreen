@@ -564,7 +564,7 @@ const AdminPanel: React.FC = () => {
                         <h2 className="text-2xl font-bold text-gray-800">Gift Items</h2>
                         <button
                             onClick={() => {
-                                setEditingGift({ name: '', emoji: '🎁', is_visible: true, sort_order: gifts.length + 1 });
+                                setEditingGift({ name: '', emoji: '🎁', is_visible: true, show_in_popup: false, sort_order: gifts.length + 1 });
                                 setGiftImageFile(null);
                                 setGiftImagePreview(null);
                             }}
@@ -603,6 +603,7 @@ const AdminPanel: React.FC = () => {
                                                 emoji: payload.emoji || '🎁',
                                                 image_url: payload.image_url,
                                                 is_visible: payload.is_visible ?? true,
+                                                show_in_popup: payload.show_in_popup ?? false,
                                                 sort_order: payload.sort_order || 0,
                                             });
                                         }
@@ -673,6 +674,11 @@ const AdminPanel: React.FC = () => {
                                         </div>
                                     </div>
 
+                                    <div className="flex items-center gap-2 py-2 px-3 bg-blue-50 rounded-lg border border-blue-100">
+                                        <input type="checkbox" id="gift-popup" checked={editingGift.show_in_popup ?? false} onChange={e => setEditingGift(prev => ({ ...prev!, show_in_popup: e.target.checked }))} className="h-5 w-5 text-blue-600" />
+                                        <label htmlFor="gift-popup" className="text-sm font-bold text-blue-700 font-bengali">পপ-আপ এ দেখাবে (Pop-up Display)</label>
+                                    </div>
+
                                     <button type="submit" disabled={giftSaving} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition disabled:opacity-50 mt-4">
                                         {giftSaving ? 'সংরক্ষণ করছে...' : (editingGift.id ? 'আপডেট করুন' : 'যোগ করুন')}
                                     </button>
@@ -691,31 +697,44 @@ const AdminPanel: React.FC = () => {
                                     ) : (
                                         <span className="text-5xl">{gift.emoji}</span>
                                     )}
+                                    {gift.show_in_popup && (
+                                        <div className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm animate-pulse z-10">
+                                            POPUP
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="p-3">
                                     <p className="font-bold text-sm text-gray-800 text-center truncate font-bengali">{gift.name}</p>
                                     <p className="text-xs text-center text-gray-400 mt-1">#{gift.sort_order}</p>
-                                    <div className="flex gap-2 mt-3">
+                                    <div className="flex flex-col gap-2 mt-3">
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={async () => { await updateGiftItem(gift.id, { is_visible: !gift.is_visible }); loadGifts(); }}
+                                                className={`flex-1 py-1 rounded text-xs font-bold transition ${gift.is_visible ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                            >
+                                                {gift.is_visible ? '👁 দেখা যায়' : '🚫 লুকানো'}
+                                            </button>
+                                            <button
+                                                onClick={() => { setEditingGift(gift); setGiftImagePreview(null); setGiftImageFile(null); }}
+                                                className="px-2 py-1 rounded text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold"
+                                            >✏️</button>
+                                            <button
+                                                onClick={async () => {
+                                                    if (window.confirm(`"${gift.name}" মুছে ফেলবেন?`)) {
+                                                        if (gift.image_url) await deleteGiftImage(gift.image_url);
+                                                        await deleteGiftItem(gift.id);
+                                                        loadGifts();
+                                                    }
+                                                }}
+                                                className="px-2 py-1 rounded text-xs bg-red-50 text-red-500 hover:bg-red-100 font-bold"
+                                            >🗑️</button>
+                                        </div>
                                         <button
-                                            onClick={async () => { await updateGiftItem(gift.id, { is_visible: !gift.is_visible }); loadGifts(); }}
-                                            className={`flex-1 py-1 rounded text-xs font-bold transition ${gift.is_visible ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                            onClick={async () => { await updateGiftItem(gift.id, { show_in_popup: !gift.show_in_popup }); loadGifts(); }}
+                                            className={`w-full py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${gift.show_in_popup ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100'}`}
                                         >
-                                            {gift.is_visible ? '👁 দেখা যায়' : '🚫 লুকানো'}
+                                            {gift.show_in_popup ? '⚡ পপ-আপ চালু' : '💨 পপ-আপ অফ'}
                                         </button>
-                                        <button
-                                            onClick={() => { setEditingGift(gift); setGiftImagePreview(null); setGiftImageFile(null); }}
-                                            className="px-2 py-1 rounded text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold"
-                                        >✏️</button>
-                                        <button
-                                            onClick={async () => {
-                                                if (window.confirm(`"${gift.name}" মুছে ফেলবেন?`)) {
-                                                    if (gift.image_url) await deleteGiftImage(gift.image_url);
-                                                    await deleteGiftItem(gift.id);
-                                                    loadGifts();
-                                                }
-                                            }}
-                                            className="px-2 py-1 rounded text-xs bg-red-50 text-red-500 hover:bg-red-100 font-bold"
-                                        >🗑️</button>
                                     </div>
                                 </div>
                             </div>

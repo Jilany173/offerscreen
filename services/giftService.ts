@@ -6,6 +6,7 @@ export interface GiftItem {
     emoji: string;
     image_url?: string;
     is_visible: boolean;
+    show_in_popup: boolean;
     sort_order: number;
     created_at?: string;
 }
@@ -20,6 +21,22 @@ export const fetchVisibleGiftItems = async (): Promise<GiftItem[]> => {
 
     if (error) {
         console.error('Error fetching gift items:', error);
+        return [];
+    }
+    return data || [];
+};
+
+// Fetch only gift items marked for popups
+export const fetchPopupGiftItems = async (): Promise<GiftItem[]> => {
+    const { data, error } = await supabase
+        .from('gift_items')
+        .select('*')
+        .eq('is_visible', true)
+        .eq('show_in_popup', true)
+        .order('sort_order', { ascending: true });
+
+    if (error) {
+        console.error('Error fetching popup gift items:', error);
         return [];
     }
     return data || [];
