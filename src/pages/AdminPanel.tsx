@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { fetchAllOffers, createOffer, updateOffer, deleteOffer, fetchCoursesForOffer, createCourse, updateCourse, deleteCourse } from '../../services/offerService';
 import { fetchAllThemes, createTheme, updateTheme, deleteTheme, setActiveTheme, ThemeSettings } from '../../services/themeService';
 import { fetchAllGiftItems, addGiftItem, updateGiftItem, deleteGiftItem, uploadGiftImage, deleteGiftImage, GiftItem } from '../../services/giftService';
+import { fetchBackgrounds, addBackground, deleteBackground, uploadBackgroundImage, setActiveBackground, BackgroundImage } from '../../services/backgroundService';
 import { Offer, Course } from '../../types';
 
 const AdminPanel: React.FC = () => {
@@ -11,7 +12,7 @@ const AdminPanel: React.FC = () => {
     };
 
     // --- State ---
-    const [activeTab, setActiveTab] = useState<'campaigns' | 'theme' | 'gifts'>('campaigns');
+    const [activeTab, setActiveTab] = useState<'campaigns' | 'theme' | 'gifts' | 'background'>('campaigns');
     const [loading, setLoading] = useState(true);
 
     // Campaign state
@@ -34,11 +35,17 @@ const AdminPanel: React.FC = () => {
     const [giftSaving, setGiftSaving] = useState(false);
     const giftFileInputRef = useRef<HTMLInputElement>(null);
 
+    // Background state
+    const [backgrounds, setBackgrounds] = useState<BackgroundImage[]>([]);
+    const [bgImageFile, setBgImageFile] = useState<File | null>(null);
+    const [bgSaving, setBgSaving] = useState(false);
+    const bgFileInputRef = useRef<HTMLInputElement>(null);
+
     useEffect(() => { loadData(); }, []);
 
     const loadData = async () => {
         setLoading(true);
-        await Promise.all([loadOffers(), loadThemes(), loadGifts()]);
+        await Promise.all([loadOffers(), loadThemes(), loadGifts(), loadBackgrounds()]);
         setLoading(false);
     };
 
@@ -46,6 +53,7 @@ const AdminPanel: React.FC = () => {
     const loadOffers = async () => setOffers(await fetchAllOffers());
     const loadThemes = async () => setAllThemes(await fetchAllThemes());
     const loadGifts = async () => setGifts(await fetchAllGiftItems());
+    const loadBackgrounds = async () => setBackgrounds(await fetchBackgrounds());
 
     const refreshCourses = async (offerId: string) => {
         const offerCourses = await fetchCoursesForOffer(offerId);
@@ -70,6 +78,48 @@ const AdminPanel: React.FC = () => {
         if (window.confirm('Are you sure you want to delete this offer?')) {
             await deleteOffer(id);
             loadOffers();
+        }
+    };
+
+    const handleDeleteGiftItem = async (gift: GiftItem) => {
+        if (window.confirm(`"${gift.name}" মুছে ফেলবেন?`)) {
+            if (gift.image_url) await deleteGiftImage(gift.image_url);
+            await deleteGiftItem(gift.id);
+            loadGifts();
+        }
+    };
+
+    // --- Background Handlers ---
+    const handleActivateBackground = async (id: string | null) => {
+        await setActiveBackground(id);
+        await loadBackgrounds();
+    };
+
+    const handleBgDelete = async (bg: BackgroundImage) => {
+        if (window.confirm(`Delete background "${bg.name}"?`)) {
+            await deleteBackground(bg.id, bg.image_url);
+            await loadBackgrounds();
+        }
+    };
+
+    const handleBgUpload = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!bgImageFile) return;
+
+        setBgSaving(true);
+        try {
+            const imageUrl = await uploadBackgroundImage(bgImageFile);
+            if (imageUrl) {
+                await addBackground(bgImageFile.name, imageUrl);
+                setBgImageFile(null);
+                if (bgFileInputRef.current) bgFileInputRef.current.value = '';
+                await loadBackgrounds();
+            }
+        } catch (error) {
+            console.error('Error uploading background:', error);
+            alert('Failed to upload background image');
+        } finally {
+            setBgSaving(false);
         }
     };
 
@@ -190,6 +240,12 @@ const AdminPanel: React.FC = () => {
                 >
                     🎁 Gift Items
                 </button>
+                <button
+                    className={`px-6 py-2 font-medium ${activeTab === 'background' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('background')}
+                >
+                    🖼️ Background
+                </button>
             </div>
 
             {/* ======================== THEME TAB ======================== */}
@@ -226,11 +282,9 @@ const AdminPanel: React.FC = () => {
                                         <button onClick={() => setEditingTheme(theme)} className="flex-1 py-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg">
                                             Edit
                                         </button>
-                                        {!theme.is_active && (
-                                            <button onClick={() => handleDeleteTheme(theme.id!)} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg">
-                                                🗑️
-                                            </button>
-                                        )}
+                                        <button onClick={() => handleDeleteTheme(theme.id!)} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete Theme">
+                                            🗑️
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -675,6 +729,96 @@ const AdminPanel: React.FC = () => {
                 </div>
             )}
 
+            {/* ======================== BACKGROUND TAB ======================== */}
+            {activeTab === 'background' && (
+                <div>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-800">Background Management</h2>
+                    </div>
+
+                    {/* Upload Section */}
+                    <div className="bg-white rounded-xl shadow-md p-6 mb-10 border border-gray-100">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Upload New Background</h3>
+                        <form onSubmit={handleBgUpload} className="flex flex-col md:flex-row gap-4 items-end">
+                            <div className="flex-grow w-full">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    ref={bgFileInputRef}
+                                    onChange={(e) => setBgImageFile(e.target.files?.[0] || null)}
+                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-blue/10 file:text-brand-blue hover:file:bg-brand-blue/20"
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={bgSaving || !bgImageFile}
+                                className="px-8 py-3 bg-brand-blue text-white rounded-xl font-bold hover:bg-brand-red transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {bgSaving ? 'Uploading...' : 'Upload & Save'}
+                            </button>
+                        </form>
+                    </div>
+
+                    {/* Background Grid */}
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {/* Default Option (No Custom Background) */}
+                        <div className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${backgrounds.every(b => !b.is_active) ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100'}`}>
+                            <div className="h-40 bg-gray-100 flex items-center justify-center">
+                                <span className="text-gray-400 font-medium">Theme Default</span>
+                            </div>
+                            <div className="p-4">
+                                <h4 className="font-bold text-gray-800 mb-3">No Background</h4>
+                                {backgrounds.some(b => b.is_active) ? (
+                                    <button
+                                        onClick={() => handleActivateBackground(null)}
+                                        className="w-full py-2 text-sm font-bold text-brand-blue bg-brand-blue/5 hover:bg-brand-blue/10 rounded-lg"
+                                    >
+                                        Use Default
+                                    </button>
+                                ) : (
+                                    <div className="w-full py-2 text-sm font-bold text-green-600 bg-green-50 text-center rounded-lg">
+                                        ACTIVE
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Custom Backgrounds */}
+                        {backgrounds.map((bg) => (
+                            <div key={bg.id} className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${bg.is_active ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100 hover:border-gray-300'}`}>
+                                <div className="h-40 relative group">
+                                    <img src={bg.image_url} alt={bg.name} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button
+                                            onClick={() => handleBgDelete(bg)}
+                                            className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                                            title="Delete"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                    {bg.is_active && (
+                                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">ACTIVE</div>
+                                    )}
+                                </div>
+                                <div className="p-4">
+                                    <h4 className="font-bold text-gray-800 mb-3 line-clamp-1" title={bg.name}>{bg.name}</h4>
+                                    {!bg.is_active && (
+                                        <button
+                                            onClick={() => handleActivateBackground(bg.id)}
+                                            className="w-full py-2 text-sm font-bold text-brand-blue bg-brand-blue/5 hover:bg-brand-blue/10 rounded-lg"
+                                        >
+                                            Activate
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

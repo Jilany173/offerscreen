@@ -105,9 +105,9 @@ export const deleteTheme = async (id: string): Promise<boolean> => {
 
 // Set a specific theme as ACTIVE (and deactivate others)
 export const setActiveTheme = async (id: string): Promise<void> => {
-    // 1. Deactivate all
-    await supabase.from('themes').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000'); // hacky catch-all
+    // 1. Deactivate ALL themes first to ensure clean state
+    await supabase.from('themes').update({ is_active: false }).not('id', 'is', null);
 
-    // 2. Activate specific
+    // 2. Activate the specific theme
     await supabase.from('themes').update({ is_active: true }).eq('id', id);
 };

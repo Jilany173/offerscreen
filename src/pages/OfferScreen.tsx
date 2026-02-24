@@ -8,6 +8,7 @@ import Footer from '../../components/Footer';
 
 import { fetchActiveOffer } from '../../services/offerService';
 import { fetchActiveTheme, ThemeSettings } from '../../services/themeService';
+import { fetchActiveBackground, BackgroundImage } from '../../services/backgroundService';
 import { Offer, Course } from '../../types';
 
 const OfferScreen: React.FC = () => {
@@ -16,6 +17,7 @@ const OfferScreen: React.FC = () => {
     const [themeSettings, setThemeSettings] = useState<ThemeSettings | null>(null);
     const [currentCourseIndex, setCurrentCourseIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [activeBackground, setActiveBackground] = useState<BackgroundImage | null>(null);
 
     const [isEnded, setIsEnded] = useState(false);
 
@@ -33,7 +35,12 @@ const OfferScreen: React.FC = () => {
             if (theme) setThemeSettings(theme);
         };
 
-        Promise.all([loadOffer(), loadTheme()]).then(() => {
+        const loadBackground = async () => {
+            const bg = await fetchActiveBackground();
+            setActiveBackground(bg);
+        };
+
+        Promise.all([loadOffer(), loadTheme(), loadBackground()]).then(() => {
             setLoading(false);
         });
     }, []);
@@ -80,9 +87,12 @@ const OfferScreen: React.FC = () => {
     const timeLeft = targetDate - new Date().getTime();
     const isEndingSoon = timeLeft > 0 && timeLeft < 7200000;
 
-    const bgStyle = themeSettings?.background_style === 'theme-2'
-        ? { backgroundImage: "url('/bg-theme-2.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }
-        : {};
+    let bgStyle: React.CSSProperties = {};
+    if (activeBackground) {
+        bgStyle = { backgroundImage: `url('${activeBackground.image_url}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' };
+    } else if (themeSettings?.background_style === 'theme-2') {
+        bgStyle = { backgroundImage: "url('/bg-theme-2.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' };
+    }
 
     // Offer Ended Screen (Clean View)
     if (isEnded) {
