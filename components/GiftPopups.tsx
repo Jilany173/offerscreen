@@ -54,28 +54,28 @@ const GiftPopups: React.FC = () => {
                     {/* Glowing effect background */}
                     <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 via-red-500 to-yellow-400 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 animate-pulse" />
 
-                    <div className="relative flex items-center gap-4 bg-white/10 backdrop-blur-xl border-2 border-white/30 p-4 rounded-2xl shadow-2xl overflow-hidden min-w-[300px]">
+                    <div className="relative flex items-center gap-4 bg-slate-900/80 backdrop-blur-2xl border-2 border-white/20 p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden min-w-[340px]">
                         {/* Shimmer effect */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
 
-                        <div className="w-20 h-20 shrink-0 bg-white/20 rounded-xl flex items-center justify-center border border-white/40 shadow-inner overflow-hidden">
+                        <div className="w-24 h-24 shrink-0 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 shadow-inner overflow-hidden">
                             {currentGift.image_url ? (
-                                <img src={currentGift.image_url} alt={currentGift.name} className="w-full h-full object-contain p-1" />
+                                <img src={currentGift.image_url} alt={currentGift.name} className="w-full h-full object-contain p-2" />
                             ) : (
-                                <span className="text-4xl drop-shadow-lg">{currentGift.emoji}</span>
+                                <span className="text-5xl drop-shadow-2xl">{currentGift.emoji}</span>
                             )}
                         </div>
 
                         <div className="flex flex-col">
-                            <span className="text-yellow-300 text-xs font-bold tracking-widest uppercase mb-1 drop-shadow-md">
-                                Special Gift
+                            <span className="text-yellow-400 text-[10px] font-black tracking-[0.2em] uppercase mb-1 drop-shadow-md">
+                                SPECIAL GIFT
                             </span>
-                            <h3 className="font-bengali text-white text-2xl font-black tracking-tight drop-shadow-lg">
+                            <h3 className="font-bengali text-white text-3xl font-black tracking-tight drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
                                 {currentGift.name}
                             </h3>
-                            <div className="flex items-center gap-1 mt-1">
-                                <span className="text-yellow-400 text-sm">✦</span>
-                                <span className="text-white/80 text-[10px] font-medium tracking-wider">WIN THIS NOW</span>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className="text-yellow-400 text-sm animate-pulse">✦</span>
+                                <span className="text-white/90 text-xs font-bold tracking-widest">GET IT NOW</span>
                             </div>
                         </div>
                     </div>
