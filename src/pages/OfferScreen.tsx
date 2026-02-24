@@ -160,15 +160,15 @@ const OfferScreen: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Relocated Promotional Text - Perfectly Centered */}
+                            {/* Relocated Promotional Text - More Eye-Catching & Premium */}
                             <div className="mt-12 flex flex-col items-center w-full scale-90 md:scale-100 origin-top">
-                                <div className="bg-gradient-to-r from-blue-700 via-blue-800 to-blue-700 text-white px-8 py-2 rounded-t-lg shadow-lg border-b border-white/10 w-full max-w-lg flex items-center justify-center relative z-20">
-                                    <h2 className="font-bengali text-lg md:text-2xl font-bold tracking-wide drop-shadow-md antialiased text-white text-center">
+                                <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white px-10 py-3 rounded-t-2xl shadow-[0_0_15px_rgba(37,99,235,0.4)] border-b border-white/20 w-full max-w-lg flex items-center justify-center relative z-20">
+                                    <h2 className="font-bengali text-lg md:text-2xl font-bold tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] antialiased text-white text-center">
                                         হেক্সাস জিন্দাবাজারে অফারে শুধু ছাড় নয়
                                     </h2>
                                 </div>
-                                <div className="bg-gradient-to-r from-red-600 via-red-700 to-red-600 text-white px-10 py-3 rounded-lg shadow-xl w-full max-w-2xl flex items-center justify-center transform -mt-1 border-2 border-white/20 relative z-30">
-                                    <h2 className="font-bengali text-xl md:text-3xl font-black tracking-wider drop-shadow-md antialiased text-white whitespace-nowrap text-center">
+                                <div className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white px-12 py-4 rounded-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] w-full max-w-2xl flex items-center justify-center transform -mt-1 border-2 border-white/30 relative z-30 transition-all hover:scale-[1.02] duration-300">
+                                    <h2 className="font-bengali text-xl md:text-3xl font-black tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] antialiased text-white whitespace-nowrap text-center">
                                         সাথে থাকছে ২০টি+ বিশেষ উপহারের কুপন।
                                     </h2>
                                 </div>
