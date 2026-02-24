@@ -18,25 +18,24 @@ const toBengaliNumber = (n: string) => {
 
 const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, language = 'bn' }) => {
 
-  const [timeLeft, setTimeLeft] = useState<TimerState>({
-    days: '00',
-    hours: '00',
-    minutes: '00',
-    seconds: '00',
-    milliseconds: '00',
-    ended: false
+  const [timerData, setTimerData] = useState<{
+    timeLeft: TimerState;
+    status: 'idle' | 'upcoming' | 'active' | 'ended';
+    isLastHours: boolean;
+  }>({
+    timeLeft: { days: '00', hours: '00', minutes: '00', seconds: '00', milliseconds: '00', ended: false },
+    status: 'idle',
+    isLastHours: false
   });
-  const [status, setStatus] = useState<'idle' | 'upcoming' | 'active' | 'ended'>('idle');
-  const [isLastHours, setIsLastHours] = useState(false);
 
   useEffect(() => {
     if (!startTime || !endTime) return;
 
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const start = new Date(startTime).getTime();
-      const end = new Date(endTime).getTime();
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
 
+    const updateTimer = () => {
+      const now = new Date().getTime();
       let targetDate = end;
       let currentStatus: 'upcoming' | 'active' | 'ended' = 'active';
 
@@ -49,20 +48,15 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
         currentStatus = 'active';
       }
 
-      setStatus(currentStatus);
-
-      // Check if last 6 hours
-      if (currentStatus === 'active' && (end - now) < (6 * 60 * 60 * 1000)) {
-        setIsLastHours(true);
-      } else {
-        setIsLastHours(false);
-      }
-
+      const isLast = currentStatus === 'active' && (end - now) < (6 * 60 * 60 * 1000);
       const distance = targetDate - now;
 
       if (currentStatus === 'ended') {
-        setTimeLeft(prev => ({ ...prev, ended: true }));
-        // Keep showing 00
+        setTimerData(prev => ({
+          ...prev,
+          status: 'ended',
+          timeLeft: { ...prev.timeLeft, ended: true }
+        }));
         return;
       }
 
@@ -71,18 +65,28 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
       const milliseconds = Math.floor((distance % 1000) / 10);
 
-      setTimeLeft({
-        days: '00',
-        hours: String(hours).padStart(2, '0'),
-        minutes: String(minutes).padStart(2, '0'),
-        seconds: String(seconds).padStart(2, '0'),
-        milliseconds: String(milliseconds).padStart(2, '0'),
-        ended: false
+      setTimerData({
+        status: currentStatus,
+        isLastHours: isLast,
+        timeLeft: {
+          days: '00',
+          hours: String(hours).padStart(2, '0'),
+          minutes: String(minutes).padStart(2, '0'),
+          seconds: String(seconds).padStart(2, '0'),
+          milliseconds: String(milliseconds).padStart(2, '0'),
+          ended: false
+        }
       });
-    }, 50);
+    };
+
+    // Initial call
+    updateTimer();
+    const interval = setInterval(updateTimer, 100);
 
     return () => clearInterval(interval);
   }, [startTime, endTime]);
+
+  const { status, isLastHours, timeLeft } = timerData;
 
   if (status === 'ended') {
     return (
