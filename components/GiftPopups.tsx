@@ -54,7 +54,7 @@ const GiftPopups: React.FC = () => {
                     {/* Glowing effect background */}
                     <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 via-red-500 to-yellow-400 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 animate-pulse" />
 
-                    <div className="relative flex items-center gap-4 bg-slate-900/80 backdrop-blur-2xl border-2 border-white/20 p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden min-w-[340px]">
+                    <div className="relative flex items-center gap-4 bg-blue-950/90 backdrop-blur-2xl border-2 border-white/20 p-5 rounded-3xl shadow-[0_20px_50px_rgba(30,58,138,0.5)] overflow-hidden min-w-[340px]">
                         {/* Shimmer effect */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
 
