@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import CountdownTimer from '../../components/CountdownTimer';
 import GiftMarquee from '../../components/GiftMarquee';
+import GiftPopups from '../../components/GiftPopups';
 import Footer from '../../components/Footer';
 
 import { fetchActiveOffer } from '../../services/offerService';
@@ -218,8 +219,9 @@ const OfferScreen: React.FC = () => {
                     {/* Footer Added Here */}
                     <Footer />
 
-                    {/* Gift Marquee Strip */}
-                    <GiftMarquee />
+                    {/* Gift Display Components */}
+                    {themeSettings?.show_gift_marquee !== false && <GiftMarquee />}
+                    {themeSettings?.show_gift_popups !== false && <GiftPopups />}
                 </div>
             </div>
         </>

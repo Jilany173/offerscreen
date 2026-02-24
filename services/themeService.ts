@@ -7,6 +7,8 @@ export interface ThemeSettings {
     header_text_2: string; // e.g. "150 Hours"
     background_style: string; // 'default' or 'theme-2'
     timer_language?: 'en' | 'bn';
+    show_gift_marquee: boolean;
+    show_gift_popups: boolean;
     is_active: boolean;
 }
 
@@ -26,6 +28,8 @@ export const fetchActiveTheme = async (): Promise<ThemeSettings | null> => {
             header_text_2: '150 Hours',
             background_style: 'default',
             timer_language: 'bn',
+            show_gift_marquee: true,
+            show_gift_popups: true,
             is_active: true
         };
     }

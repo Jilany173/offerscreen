@@ -127,7 +127,14 @@ const AdminPanel: React.FC = () => {
 
     // --- Theme Handlers ---
     const handleAddTheme = () => {
-        setEditingTheme({ header_text_1: 'New Theme', header_text_2: '150 Hours', background_style: 'default', is_active: false });
+        setEditingTheme({
+            header_text_1: 'New Theme',
+            header_text_2: '150 Hours',
+            background_style: 'default',
+            show_gift_marquee: true,
+            show_gift_popups: true,
+            is_active: false
+        });
         setIsCreatingTheme(true);
     };
 
@@ -282,6 +289,29 @@ const AdminPanel: React.FC = () => {
                                             <option value="bn">Bengali (বাংলা)</option>
                                             <option value="en">English</option>
                                         </select>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id="show_marquee"
+                                                checked={editingTheme?.show_gift_marquee ?? true}
+                                                onChange={(e) => setEditingTheme(prev => ({ ...prev!, show_gift_marquee: e.target.checked }))}
+                                                className="h-5 w-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                                            />
+                                            <label htmlFor="show_marquee" className="text-sm font-bold text-gray-700 cursor-pointer">Show Marquee</label>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id="show_popups"
+                                                checked={editingTheme?.show_gift_popups ?? true}
+                                                onChange={(e) => setEditingTheme(prev => ({ ...prev!, show_gift_popups: e.target.checked }))}
+                                                className="h-5 w-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                                            />
+                                            <label htmlFor="show_popups" className="text-sm font-bold text-gray-700 cursor-pointer">Show Popups</label>
+                                        </div>
                                     </div>
 
                                     <button type="submit" className="w-full py-4 bg-brand-blue text-white rounded-xl font-bold text-lg hover:bg-brand-red transition-colors shadow-lg mt-4">
