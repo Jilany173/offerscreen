@@ -142,9 +142,6 @@ const OfferScreen: React.FC = () => {
                                             ৳{discountedPrice}
                                         </div>
                                     </div>
-                                    <div className="mt-6 text-xs font-bold text-gray-400 uppercase tracking-[0.2em] animate-pulse">
-                                        Limited Slots Available
-                                    </div>
                                 </div>
 
                                 {/* Course Indicators */}
