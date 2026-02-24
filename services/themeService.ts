@@ -59,6 +59,8 @@ export const createTheme = async (theme: ThemeSettings): Promise<ThemeSettings |
             header_text_2: theme.header_text_2,
             background_style: theme.background_style,
             timer_language: theme.timer_language || 'bn',
+            show_gift_marquee: theme.show_gift_marquee ?? true,
+            show_gift_popups: theme.show_gift_popups ?? true,
             is_active: false // Default to inactive when creating
         }])
         .select()

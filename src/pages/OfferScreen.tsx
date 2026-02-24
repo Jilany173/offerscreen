@@ -217,7 +217,9 @@ const OfferScreen: React.FC = () => {
                     </main>
 
                     {/* Footer Added Here */}
-                    <Footer />
+                    <div className={themeSettings?.show_gift_marquee === false ? 'pb-12' : 'pb-0'}>
+                        <Footer />
+                    </div>
 
                     {/* Gift Display Components */}
                     {themeSettings?.show_gift_marquee !== false && <GiftMarquee />}

@@ -144,7 +144,8 @@ const AdminPanel: React.FC = () => {
         if (isCreatingTheme) {
             await createTheme(editingTheme);
         } else if (editingTheme.id) {
-            await updateTheme(editingTheme.id, editingTheme);
+            const { id, ...updates } = editingTheme;
+            await updateTheme(id, updates);
         }
         await loadThemes();
         setEditingTheme(null);
