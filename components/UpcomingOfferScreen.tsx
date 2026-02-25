@@ -32,6 +32,14 @@ const UpcomingOfferScreen: React.FC<UpcomingOfferScreenProps> = ({ offer, langua
         ? offer.courses[0].title
         : null;
 
+    // offer.title-এ HTML থাকতে পারে, strip করে clean text নেওয়া
+    const stripHtml = (html: string) => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    };
+    const offerName = offer.title ? stripHtml(offer.title) : null;
+
     return (
         <div
             className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden"
@@ -46,9 +54,19 @@ const UpcomingOfferScreen: React.FC<UpcomingOfferScreenProps> = ({ offer, langua
                 {/* আইকন */}
                 <div className="text-7xl mb-4 animate-bounce">🎯</div>
 
+                {/* Offer নাম — COMING SOON-এর উপরে */}
+                {offerName && (
+                    <div
+                        className="headline-font text-4xl md:text-6xl font-black text-yellow-300 mb-2 select-none"
+                        style={{ textShadow: '2px 2px 0px #000, 0 0 20px rgba(253,224,71,0.5)', letterSpacing: '0.05em' }}
+                    >
+                        {offerName}
+                    </div>
+                )}
+
                 {/* COMING SOON হেডিং */}
                 <div
-                    className="headline-font text-5xl md:text-8xl font-black text-yellow-300 mb-2 select-none"
+                    className="headline-font text-5xl md:text-8xl font-black text-white mb-2 select-none"
                     style={{
                         textShadow: '3px 3px 0px #000, -1px -1px 0px #000, 0 0 30px rgba(253,224,71,0.5)',
                         letterSpacing: '0.05em'
@@ -69,17 +87,7 @@ const UpcomingOfferScreen: React.FC<UpcomingOfferScreenProps> = ({ offer, langua
                 {/* বিভাজক রেখা */}
                 <div className="w-48 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent rounded-full mb-6 opacity-70" />
 
-                {/* অফার / কোর্স নাম */}
-                {courseName && (
-                    <div className="font-bengali text-2xl md:text-3xl font-bold text-white/90 mb-2 drop-shadow-lg">
-                        {courseName}
-                    </div>
-                )}
-                {offer.title && (
-                    <div className="font-bengali text-lg md:text-xl font-semibold text-yellow-300/80 mb-8">
-                        {offer.title}
-                    </div>
-                )}
+
 
                 {/* কাউন্টডাউন টাইমার */}
                 <CountdownTimer
