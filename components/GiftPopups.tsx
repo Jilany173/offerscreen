@@ -44,10 +44,10 @@ const GiftPopups: React.FC = () => {
     const currentGift = visibleGifts[currentGiftIndex];
 
     return (
-        <div className="fixed bottom-32 left-8 z-[100] perspective-1000">
+        <div className="fixed top-[140px] right-[40px] z-[9999] perspective-1000">
             <div className={`
-                transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-                ${isVisible ? 'opacity-100 translate-y-0 scale-100 rotate-0' : 'opacity-0 translate-y-20 scale-50 -rotate-12 pointer-events-none'}
+                transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] whitespace-nowrap
+                ${isVisible ? 'opacity-100 translate-x-0 scale-100 rotate-0' : 'opacity-0 translate-x-[500px] scale-90 rotate-3 pointer-events-none'}
             `}>
                 <div className="relative group">
                     {/* Glowing effect background */}

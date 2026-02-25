@@ -183,6 +183,7 @@ const AdminPanel: React.FC = () => {
             background_style: 'default',
             show_gift_marquee: true,
             show_gift_popups: true,
+            card_rotation_interval: 6,
             is_active: false
         });
         setIsCreatingTheme(true);
@@ -344,6 +345,19 @@ const AdminPanel: React.FC = () => {
                                             <option value="bn">Bengali (বাংলা)</option>
                                             <option value="en">English</option>
                                         </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Card Rotation Interval (Seconds)</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            value={editingTheme?.card_rotation_interval || 6}
+                                            onChange={(e) => setEditingTheme(prev => ({ ...prev!, card_rotation_interval: Number(e.target.value) }))}
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
+                                            placeholder="e.g. 6"
+                                        />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">

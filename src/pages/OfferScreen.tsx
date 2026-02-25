@@ -63,12 +63,13 @@ const OfferScreen: React.FC = () => {
     // Course Cycling Logic
     useEffect(() => {
         if (courses.length > 1 && !isEnded) {
+            const intervalTime = (themeSettings?.card_rotation_interval || 6) * 1000;
             const interval = setInterval(() => {
                 setCurrentCourseIndex(prevIndex => (prevIndex + 1) % courses.length);
-            }, 6000); // Cycle every 6 seconds
+            }, intervalTime); // Dynamic cycle time
             return () => clearInterval(interval);
         }
-    }, [courses, isEnded]);
+    }, [courses, isEnded, themeSettings?.card_rotation_interval]);
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center text-brand-blue text-2xl animate-pulse">Loading...</div>;
@@ -114,9 +115,9 @@ const OfferScreen: React.FC = () => {
 
     return (
         <>
-            <div className="w-full min-h-screen flex justify-center bg-gray-50 overflow-x-hidden">
+            <div className="w-full h-screen flex justify-center bg-gray-50 overflow-hidden">
                 <div
-                    className={`main-container w-full max-w-[1920px] min-h-screen flex flex-col animate-fade-in relative overflow-hidden shadow-2xl ${themeSettings?.background_style === 'default' ? 'bg-brand-blue/5' : ''}`}
+                    className={`main-container w-full max-w-[1920px] h-screen flex flex-col animate-fade-in relative overflow-hidden shadow-2xl ${themeSettings?.background_style === 'default' ? 'bg-brand-blue/5' : ''}`}
                     style={bgStyle}
                 >
                     {/* Overlay for readability if using image bg */}
@@ -126,16 +127,16 @@ const OfferScreen: React.FC = () => {
 
                     <Header />
 
-                    <main className="flex-grow flex flex-col lg:flex-row items-center justify-center px-6 lg:px-20 gap-12 lg:gap-20 py-12 relative z-10">
+                    <main className="flex-grow flex flex-col lg:flex-row items-center justify-center px-6 lg:px-20 gap-8 lg:gap-20 py-4 relative z-10 overflow-hidden">
                         {/* Left Section: Pricing Card Container */}
-                        <div className="flex flex-col items-center text-center lg:items-center w-full max-w-[550px] min-h-[550px] justify-center mt-5 md:mt-10">
+                        <div className="flex flex-col items-center text-center lg:items-center w-full max-w-[550px] min-h-[500px] justify-center mt-2 md:mt-4">
                             {/* Pricing Card */}
-                            <div key={currentCourseIndex} className="bg-white border-4 border-brand-blue rounded-3xl pt-10 px-8 pb-16 w-full max-w-xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 relative overflow-hidden group animate-flip-in">
+                            <div key={currentCourseIndex} className="bg-white border-4 border-brand-blue rounded-3xl pt-10 px-8 pb-12 w-full max-w-xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 relative overflow-hidden group animate-flip-in">
 
 
                                 {/* Course Title (Dynamic) */}
-                                <div className="h-24 flex items-center justify-center mb-6">
-                                    <h2 className="text-3xl md:text-4xl font-black text-brand-blue text-center leading-tight drop-shadow-sm">
+                                <div className="h-24 flex items-center justify-center mb-4">
+                                    <h2 className="text-2xl md:text-3xl font-black text-brand-blue text-center leading-tight drop-shadow-sm">
                                         {displayTitle}
                                     </h2>
                                 </div>
@@ -143,14 +144,14 @@ const OfferScreen: React.FC = () => {
                                 {/* Pricing Section (Dynamic) */}
                                 <div className="text-center">
                                     <div className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Regular Fee</div>
-                                    <div className="text-3xl md:text-5xl font-black text-gray-900 line-through decoration-4 decoration-brand-red/70 mb-4 opacity-80">
-                                        ৳{originalPrice}
+                                    <div className="text-2xl md:text-4xl font-black text-gray-900 line-through decoration-4 decoration-brand-red/70 mb-6 opacity-80">
+                                        ৳{originalPrice.toLocaleString('en-IN')}
                                     </div>
 
                                     <div className="relative inline-block">
                                         <div className="absolute inset-0 bg-brand-red blur-lg opacity-30 rounded-full animate-pulse-slow"></div>
                                         <div className="bg-brand-red text-white text-6xl md:text-8xl font-black px-8 py-2 rounded-2xl shadow-xl transform group-hover:scale-105 transition-transform duration-300 relative z-10 rotate-2">
-                                            ৳{discountedPrice}
+                                            ৳{discountedPrice.toLocaleString('en-IN')}
                                         </div>
                                     </div>
                                 </div>
@@ -169,14 +170,14 @@ const OfferScreen: React.FC = () => {
                             </div>
 
                             {/* Relocated Promotional Text - More Eye-Catching & Premium */}
-                            <div className="mt-12 flex flex-col items-center w-full scale-90 md:scale-100 origin-top">
-                                <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white px-10 py-3 rounded-t-2xl shadow-[0_0_15px_rgba(37,99,235,0.4)] border-b border-white/20 w-full max-w-lg flex items-center justify-center relative z-20">
-                                    <h2 className="font-bengali text-lg md:text-2xl font-bold tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] antialiased text-white text-center">
+                            <div className="mt-6 flex flex-col items-center w-full scale-90 md:scale-95 origin-top">
+                                <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white px-8 py-2 rounded-t-2xl shadow-[0_0_15px_rgba(37,99,235,0.4)] border-b border-white/20 w-full max-w-lg flex items-center justify-center relative z-20">
+                                    <h2 className="font-bengali text-base md:text-xl font-bold tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] antialiased text-white text-center">
                                         হেক্সাস জিন্দাবাজারে অফারে শুধু ছাড় নয়
                                     </h2>
                                 </div>
-                                <div className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white px-12 py-4 rounded-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] w-full max-w-2xl flex items-center justify-center transform -mt-1 border-2 border-white/30 relative z-30 transition-all hover:scale-[1.02] duration-300">
-                                    <h2 className="font-bengali text-xl md:text-3xl font-black tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] antialiased text-white whitespace-nowrap text-center">
+                                <div className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white px-10 py-3 rounded-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] w-full max-w-2xl flex items-center justify-center transform -mt-1 border-2 border-white/30 relative z-30 transition-all hover:scale-[1.02] duration-300">
+                                    <h2 className="font-bengali text-lg md:text-2xl font-black tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] antialiased text-white whitespace-nowrap text-center">
                                         সাথে থাকছে ২০টি+ বিশেষ উপহারের কুপন।
                                     </h2>
                                 </div>
@@ -184,7 +185,7 @@ const OfferScreen: React.FC = () => {
                         </div>
 
                         {/* Right Section: Jackpot Highlight */}
-                        <div className={`hidden lg:flex flex-col items-start border-l-4 border-brand-red pl-16 text-left py-10 relative w-full lg:w-auto flex-1 transition-all duration-500`}>
+                        <div className={`hidden lg:flex flex-col items-start border-l-4 border-brand-red pl-10 text-left py-6 relative w-full lg:w-auto flex-1 transition-all duration-500`}>
                             {isEndingSoon && (
                                 <div className="absolute -top-10 left-10 bg-red-600 text-white px-4 py-1 rounded-full font-bold animate-bounce shadow-lg z-20">
                                     ⚠️ HURRY! ENDING SOON!
@@ -215,13 +216,12 @@ const OfferScreen: React.FC = () => {
                                 OFFER
                             </div>
 
-                            <div className="mt-8 w-full">
+                            <div className="mt-4 w-full">
                                 <CountdownTimer
                                     startTime={offer?.start_time}
                                     endTime={offer?.end_time}
                                     language={themeSettings?.timer_language}
                                 />
-
                             </div>
                         </div>
                     </main>
