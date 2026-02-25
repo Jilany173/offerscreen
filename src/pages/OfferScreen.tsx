@@ -5,14 +5,16 @@ import CountdownTimer from '../../components/CountdownTimer';
 import GiftMarquee from '../../components/GiftMarquee';
 import GiftPopups from '../../components/GiftPopups';
 import Footer from '../../components/Footer';
+import UpcomingOfferScreen from '../../components/UpcomingOfferScreen';
 
-import { fetchActiveOffer } from '../../services/offerService';
+import { fetchActiveOffer, fetchUpcomingOffer } from '../../services/offerService';
 import { fetchActiveTheme, ThemeSettings } from '../../services/themeService';
 import { fetchActiveBackground, BackgroundImage } from '../../services/backgroundService';
 import { Offer, Course } from '../../types';
 
 const OfferScreen: React.FC = () => {
     const [offer, setOffer] = useState<Offer | null>(null);
+    const [upcomingOffer, setUpcomingOffer] = useState<Offer | null>(null);
     const [courses, setCourses] = useState<Course[]>([]);
     const [themeSettings, setThemeSettings] = useState<ThemeSettings | null>(null);
     const [currentCourseIndex, setCurrentCourseIndex] = useState(0);
@@ -24,9 +26,13 @@ const OfferScreen: React.FC = () => {
     useEffect(() => {
         const loadOffer = async () => {
             const activeOffer = await fetchActiveOffer();
-            setOffer(activeOffer);
-            if (activeOffer && activeOffer.courses) {
-                setCourses(activeOffer.courses);
+            if (activeOffer) {
+                setOffer(activeOffer);
+                if (activeOffer.courses) setCourses(activeOffer.courses);
+            } else {
+                // চলমান অফার নেই — upcoming খোঁজো
+                const upcoming = await fetchUpcomingOffer();
+                setUpcomingOffer(upcoming);
             }
         };
 
@@ -75,6 +81,8 @@ const OfferScreen: React.FC = () => {
         return <div className="min-h-screen flex items-center justify-center text-brand-blue text-2xl animate-pulse">Loading...</div>;
     }
 
+
+
     const headerText1 = themeSettings?.header_text_1 || "Ramadan Special";
     const headerText2 = themeSettings?.header_text_2 || "150 Hours";
 
@@ -93,6 +101,17 @@ const OfferScreen: React.FC = () => {
         bgStyle = { backgroundImage: `url('${activeBackground.image_url}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' };
     } else if (themeSettings?.background_style === 'theme-2') {
         bgStyle = { backgroundImage: "url('/bg-theme-2.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' };
+    }
+
+    // আপকামিং অফার স্ক্রিন
+    if (!offer && upcomingOffer) {
+        return (
+            <UpcomingOfferScreen
+                offer={upcomingOffer}
+                language={themeSettings?.timer_language || 'bn'}
+                bgStyle={bgStyle}
+            />
+        );
     }
 
     // Offer Ended Screen (Clean View)

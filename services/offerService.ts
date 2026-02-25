@@ -28,6 +28,32 @@ export const fetchActiveOffer = async (): Promise<Offer | null> => {
     return data;
 };
 
+// Fetch the next upcoming (scheduled) offer — active but not yet started
+export const fetchUpcomingOffer = async (): Promise<Offer | null> => {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+        .from('offers')
+        .select(`
+            *,
+            courses (*)
+        `)
+        .eq('is_active', true)
+        .gt('start_time', now)  // শুরু হয়নি এখনো
+        .order('start_time', { ascending: true })
+        .limit(1)
+        .single();
+
+    if (error) {
+        if (error.code !== "PGRST116") {
+            console.error('Error fetching upcoming offer:', error);
+        }
+        return null;
+    }
+
+    return data;
+};
+
+
 // Fetch all offers (campaigns)
 export const fetchAllOffers = async (): Promise<Offer[]> => {
     const { data, error } = await supabase
