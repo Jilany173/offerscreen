@@ -30,7 +30,7 @@ const GiftMarquee: React.FC = () => {
                             <img
                                 src={gift.image_url}
                                 alt={gift.name}
-                                className="w-10 h-10 object-contain rounded-lg"
+                                className="w-16 h-16 object-contain rounded-lg"
                             />
                         ) : (
                             <span className="text-3xl">{gift.emoji}</span>

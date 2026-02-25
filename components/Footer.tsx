@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
       {/* Second Set of Messages (New Request) */}
       <div className="flex flex-col items-center w-full">
         {/* Blue Box */}
-        <div className="bg-gradient-to-r from-blue-800 via-blue-900 to-blue-800 text-white px-6 py-2 rounded-t-xl shadow-xl border-b border-white/10 w-full max-w-4xl text-center relative z-20">
+        <div className="bg-gradient-to-r from-blue-800 via-blue-900 to-blue-800 text-white px-6 py-2 rounded-t-xl shadow-xl border-b border-white/10 w-fit text-center relative z-20">
           <h2
             className="font-bengali text-lg md:text-2xl font-bold tracking-wide drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] antialiased text-white"
           >
