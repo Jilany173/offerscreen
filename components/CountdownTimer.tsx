@@ -111,7 +111,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
 
   const getNumberColor = () => {
     if (status === 'upcoming') return 'text-brand-blue';
-    return 'text-[#B45309]'; // Deep Gold
+    return 'text-brand-blue'; // Change from Deep Gold to Black/Brand Blue for active offer
   };
 
   const Box = ({ value, label }: { value: string; label: string }) => {
