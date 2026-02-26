@@ -166,7 +166,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
 
         {/* বাকি টেক্সট */}
         <div
-          className={`absolute -right-6 md:-right-12 lg:-right-16 top-1/2 transform translate-x-full -translate-y-1/2 flex items-center ${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-5xl font-black ${getLabelColor()}`}
+          className={`absolute -right-4 md:-right-8 lg:-right-12 bottom-0 md:bottom-2 transform translate-x-full flex items-center ${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-5xl font-black ${getLabelColor()}`}
           style={{ WebkitTextStroke: '0.5px white', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
         >
           {language === 'bn' ? 'বাকি...' : 'LEFT...'}
