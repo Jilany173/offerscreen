@@ -44,38 +44,35 @@ const GiftPopups: React.FC = () => {
     const currentGift = visibleGifts[currentGiftIndex];
 
     return (
-        <div className="fixed top-[140px] right-[40px] z-[9999] perspective-1000">
+        <div className="fixed top-[50%] -translate-y-1/2 -right-4 z-[9999] perspective-1000">
             <div className={`
                 transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] whitespace-nowrap
-                ${isVisible ? 'opacity-100 translate-x-0 scale-100 rotate-0' : 'opacity-0 translate-x-[500px] scale-90 rotate-3 pointer-events-none'}
+                ${isVisible ? 'opacity-100 translate-x-[40px] scale-100 rotate-0' : 'opacity-0 translate-x-[500px] scale-90 rotate-3 pointer-events-none'}
             `}>
-                <div className="relative group">
-                    {/* Glowing effect background */}
-                    <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 via-red-500 to-yellow-400 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 animate-pulse" />
+                <div className="relative flex items-center gap-4 bg-[#2f6cef] p-3 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] overflow-hidden min-w-[280px]">
+                    {/* Shimmer effect for premium feel */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
 
-                    <div className="relative flex items-center gap-4 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 backdrop-blur-2xl border-2 border-white/30 p-5 rounded-3xl shadow-[0_20px_50px_rgba(30,58,138,0.6)] overflow-hidden min-w-[340px]">
-                        {/* Shimmer effect */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
+                    {/* Image Box */}
+                    <div className="w-[72px] h-[72px] shrink-0 bg-[#1d52ce] rounded-xl flex items-center justify-center overflow-hidden">
+                        {currentGift.image_url ? (
+                            <img src={currentGift.image_url} alt={currentGift.name} className="w-full h-full object-contain p-2 drop-shadow-md transition-transform duration-300 hover:scale-110" />
+                        ) : (
+                            <span className="text-4xl drop-shadow-md">{currentGift.emoji}</span>
+                        )}
+                    </div>
 
-                        <div className="w-24 h-24 shrink-0 bg-white/20 rounded-2xl flex items-center justify-center border border-white/30 shadow-inner overflow-hidden">
-                            {currentGift.image_url ? (
-                                <img src={currentGift.image_url} alt={currentGift.name} className="w-full h-full object-contain p-2" />
-                            ) : (
-                                <span className="text-5xl drop-shadow-2xl">{currentGift.emoji}</span>
-                            )}
-                        </div>
-
-                        <div className="flex flex-col">
-                            <span className="text-yellow-400 text-[10px] font-black tracking-[0.2em] uppercase mb-1 drop-shadow-md">
-                                SPECIAL GIFT
-                            </span>
-                            <h3 className="font-bengali text-white text-3xl font-black tracking-tight drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                                {currentGift.name}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-2">
-                                <span className="text-yellow-400 text-sm animate-pulse">✦</span>
-                                <span className="text-white/90 text-xs font-bold tracking-widest">GET IT NOW</span>
-                            </div>
+                    {/* Text Content */}
+                    <div className="flex flex-col justify-center py-1 pr-6 relative z-10">
+                        <span className="text-[#FFD700] text-[9px] font-bold tracking-[0.15em] uppercase mb-0.5 opacity-90 drop-shadow-sm">
+                            SPECIAL GIFT
+                        </span>
+                        <h3 className="font-bengali text-white text-[22px] font-bold leading-none mb-1.5 drop-shadow-md">
+                            {currentGift.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[#FFD700] text-[10px] animate-pulse">✦</span>
+                            <span className="text-white text-[11px] font-bold tracking-widest uppercase opacity-95">GET IT NOW</span>
                         </div>
                     </div>
                 </div>
