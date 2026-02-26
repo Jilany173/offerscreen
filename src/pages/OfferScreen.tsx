@@ -160,10 +160,8 @@ const OfferScreen: React.FC = () => {
     if (isEnded) {
         return (
             <div className="w-full min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
-                {/* Overlay for readability if using image bg */}
-                {themeSettings?.background_style === 'theme-2' && (
-                    <div className="absolute inset-0 bg-white/40 z-0"></div>
-                )}
+                {/* Dark overlay for readability */}
+                <div className="absolute inset-0 bg-black/60 z-0"></div>
                 <div className="relative z-10 flex flex-col items-center text-center px-4 animate-fade-in scale-110 md:scale-150">
                     <div className="headline-font text-6xl md:text-9xl text-brand-red font-black drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] select-none tracking-tighter">
                         OFFER <span className="text-gray-900">ENDED</span>
@@ -181,10 +179,8 @@ const OfferScreen: React.FC = () => {
                     className={`main-container w-full max-w-[1920px] h-screen flex flex-col animate-fade-in relative overflow-hidden shadow-2xl ${themeSettings?.background_style === 'default' ? 'bg-brand-blue/5' : ''}`}
                     style={bgStyle}
                 >
-                    {/* Overlay for readability if using image bg */}
-                    {themeSettings?.background_style === 'theme-2' && (
-                        <div className="absolute inset-0 bg-white/40 z-0"></div>
-                    )}
+                    {/* Dark overlay for readability */}
+                    <div className="absolute inset-0 bg-black/60 z-0"></div>
 
                     <Header />
 
