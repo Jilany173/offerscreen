@@ -15,10 +15,10 @@ const GiftMarquee: React.FC = () => {
     const doubledGifts = [...gifts, ...gifts];
 
     return (
-        <div className="w-full bg-black/30 backdrop-blur-sm border-t border-b border-yellow-400/30 py-3 overflow-hidden relative">
+        <div className="w-full bg-black/60 shadow-[0_-5px_20px_rgba(0,0,0,0.5)] border-t border-white/10 py-2.5 overflow-hidden relative">
             {/* Fade edges */}
-            <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-black/40 to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-black/40 to-transparent z-10 pointer-events-none" />
+            <div className="absolute left-0 top-0 h-full w-12 bg-gradient-to-r from-black/80 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-black/80 to-transparent z-10 pointer-events-none" />
 
             <div className="flex gift-marquee-track">
                 {doubledGifts.map((gift, idx) => (

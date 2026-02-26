@@ -7,18 +7,18 @@ const Footer: React.FC = () => {
       {/* Second Set of Messages (New Request) */}
       <div className="flex flex-col items-center w-full">
         {/* Blue Box */}
-        <div className="bg-gradient-to-r from-blue-800 via-blue-900 to-blue-800 text-white px-6 py-2 rounded-full shadow-xl border border-white/10 w-fit text-center relative z-20">
+        <div className="bg-[#183aae] flex items-center justify-center relative z-20 w-max mx-auto shadow-[0_4px_15px_rgba(24,58,174,0.6)] border border-white/20 rounded-full py-1.5 md:py-2.5 px-6 md:px-12">
           <h2
-            className="font-bengali text-lg md:text-2xl font-bold tracking-wide drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] antialiased text-white"
+            className="font-bengali text-lg md:text-3xl font-bold tracking-wide drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] antialiased text-white"
           >
-            প্রথমে যারা রেজিস্ট্রেশন করবেন, শুধুমাত্র তারাই পাবেন স্পেশাল কুপন।
+            প্রথমে যারা এডমিশন নিবেন, শুধুমাত্র তারাই পাবেন স্পেশাল কুপন।
           </h2>
         </div>
 
-        {/* Red Box */}
-        <div className="bg-gradient-to-r from-red-600 via-red-700 to-red-600 text-white px-10 py-2 rounded-xl shadow-2xl w-fit min-w-[300px] text-center transform -mt-2 border-2 border-white/20 relative z-30 transition-transform hover:scale-[1.01] duration-300">
-          <h2 className="font-bengali text-2xl md:text-3xl font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.6)] antialiased">
-            কুপন খুললেই গিফট!
+        {/* Bottom red container */}
+        <div className="bg-[#d2202a] text-white px-8 md:px-14 py-2 md:py-3 rounded-full shadow-[0_8px_20px_rgba(210,32,42,0.8)] w-max mx-auto flex items-center justify-center transform -mt-2 relative z-20 border border-white/20">
+          <h2 className="font-bengali text-xl md:text-3xl font-black tracking-wider drop-shadow-lg text-white text-center">
+            কুপন খুললেই নিশ্চিত গিফট!
           </h2>
         </div>
       </div>

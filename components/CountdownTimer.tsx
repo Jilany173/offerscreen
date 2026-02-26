@@ -97,9 +97,9 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
   }
 
   const getLabelColor = () => {
-    if (status === 'upcoming') return 'text-brand-blue';
-    if (isLastHours) return 'text-red-600 animate-pulse';
-    return 'text-brand-red'; // Red for normal active as requested
+    if (status === 'upcoming') return 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]';
+    if (isLastHours) return 'text-red-600 animate-pulse drop-shadow-md';
+    return 'text-brand-red drop-shadow-md'; // Red for normal active as requested
   };
 
   const getBoxBorderColor = () => {
@@ -151,7 +151,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
         style={{ WebkitTextStroke: '0.5px white' }}
       >
         {language === 'bn'
-          ? (status === 'upcoming' ? 'শুরু হবে......' : 'আর মাত্র......')
+          ? (status === 'upcoming' ? 'শুরু হতে আর মাত্র......' : 'আর মাত্র......')
           : (status === 'upcoming' ? 'STARTS IN......' : 'ENDS IN......')}
       </div>
       <div className="flex flex-wrap items-end justify-center lg:justify-start gap-3 md:gap-11">
