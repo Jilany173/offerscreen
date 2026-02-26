@@ -146,7 +146,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
 
 
   return (
-    <div className="flex flex-col items-center lg:items-start mt-6">
+    <div className="flex flex-col items-center mt-6">
       <div
         className={`${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-4xl font-extrabold tracking-[0.2em] mb-4 ${getLabelColor()}`}
         style={{ WebkitTextStroke: '0.5px white' }}
@@ -155,8 +155,8 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
           ? (status === 'upcoming' ? 'শুরু হতে আর মাত্র......' : 'আর মাত্র......')
           : (status === 'upcoming' ? 'STARTS IN......' : 'ENDS IN......')}
       </div>
-      <div className="relative flex items-center justify-center lg:justify-start">
-        <div className="flex flex-wrap items-end justify-center lg:justify-start gap-3 md:gap-11">
+      <div className="relative flex items-center justify-center">
+        <div className="flex flex-wrap items-end justify-center gap-3 md:gap-11">
           <Box value={language === 'bn' ? toBengaliNumber(timeLeft.hours) : timeLeft.hours} label={language === 'bn' ? "ঘণ্টা" : "Hours"} />
           <Box value={language === 'bn' ? toBengaliNumber(timeLeft.minutes) : timeLeft.minutes} label={language === 'bn' ? "মিনিট" : "Minutes"} />
           <Box value={language === 'bn' ? toBengaliNumber(timeLeft.seconds) : timeLeft.seconds} label={language === 'bn' ? "সেকেন্ড" : "Seconds"} />
