@@ -43,7 +43,7 @@ const GiftPopups: React.FC = () => {
 
         timeoutRefs.current.initial = setTimeout(showNextGift, 2000);
 
-        return clearAllTimeouts;
+        return () => clearAllTimeouts();
     }, [visibleGifts, currentGiftIndex]);
 
     if (visibleGifts.length === 0) return null;
