@@ -242,9 +242,9 @@ const OfferScreen: React.FC = () => {
                         </div>
 
                         {/* Right Section: Jackpot Highlight */}
-                        <div className={`hidden lg:flex flex-col items-center border-l-4 border-brand-red pl-10 text-center py-6 relative w-full lg:w-auto flex-1 transition-all duration-500`}>
+                        <div className={`hidden lg:flex flex-col items-start border-l-4 border-brand-red pl-10 text-left py-6 relative w-full lg:w-auto flex-1 transition-all duration-500`}>
                             {isEndingSoon && (
-                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-1 rounded-full font-bold animate-bounce shadow-lg z-20">
+                                <div className="absolute -top-10 left-10 bg-red-600 text-white px-4 py-1 rounded-full font-bold animate-bounce shadow-lg z-20">
                                     ⚠️ HURRY! ENDING SOON!
                                 </div>
                             )}
@@ -273,7 +273,7 @@ const OfferScreen: React.FC = () => {
                                 OFFER
                             </div>
 
-                            <div className="mt-4 w-full">
+                            <div className="mt-4 w-full flex justify-center lg:justify-start lg:w-auto lg:mx-auto">
                                 <CountdownTimer
                                     startTime={offer?.start_time}
                                     endTime={offer?.end_time}
