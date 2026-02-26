@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../../components/Header';
 import CountdownTimer from '../../components/CountdownTimer';
 import GiftMarquee from '../../components/GiftMarquee';
@@ -22,6 +22,48 @@ const OfferScreen: React.FC = () => {
     const [activeBackground, setActiveBackground] = useState<BackgroundImage | null>(null);
 
     const [isEnded, setIsEnded] = useState(false);
+    const wakeLockRef = useRef<any>(null);
+
+    // Screen Wake Lock API to prevent TV from sleeping
+    useEffect(() => {
+        const requestWakeLock = async () => {
+            if ('wakeLock' in navigator) {
+                try {
+                    // @ts-ignore
+                    wakeLockRef.current = await navigator.wakeLock.request('screen');
+                    console.log('Screen Wake Lock is active');
+
+                    // Re-request if visibility changes
+                    // @ts-ignore
+                    wakeLockRef.current.addEventListener('release', () => {
+                        console.log('Screen Wake Lock was released');
+                    });
+                } catch (err: any) {
+                    console.error(`${err.name}, ${err.message}`);
+                }
+            } else {
+                console.warn('Screen Wake Lock API not supported by this browser.');
+            }
+        };
+
+        const handleVisibilityChange = async () => {
+            if (wakeLockRef.current !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        };
+
+        requestWakeLock();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            if (wakeLockRef.current !== null) {
+                // @ts-ignore
+                wakeLockRef.current.release();
+                wakeLockRef.current = null;
+            }
+        };
+    }, []);
 
     useEffect(() => {
         const loadOffer = async () => {
