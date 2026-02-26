@@ -63,7 +63,6 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
       const hours = Math.floor(distance / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      const milliseconds = Math.floor((distance % 1000) / 10);
 
       setTimerData({
         status: currentStatus,
@@ -73,7 +72,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
           hours: String(hours).padStart(2, '0'),
           minutes: String(minutes).padStart(2, '0'),
           seconds: String(seconds).padStart(2, '0'),
-          milliseconds: String(milliseconds).padStart(2, '0'),
+          milliseconds: '00', // Disabled tracking to save CPU
           ended: false
         }
       });
@@ -81,7 +80,9 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
 
     // Initial call
     updateTimer();
-    const interval = setInterval(updateTimer, 100);
+
+    // Changing interval from 100ms to 1000ms (1 sec) significantly reduces React re-renders and CPU load on TVs
+    const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
   }, [startTime, endTime]);
@@ -159,9 +160,6 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
           <Box value={language === 'bn' ? toBengaliNumber(timeLeft.hours) : timeLeft.hours} label={language === 'bn' ? "ঘণ্টা" : "Hours"} />
           <Box value={language === 'bn' ? toBengaliNumber(timeLeft.minutes) : timeLeft.minutes} label={language === 'bn' ? "মিনিট" : "Minutes"} />
           <Box value={language === 'bn' ? toBengaliNumber(timeLeft.seconds) : timeLeft.seconds} label={language === 'bn' ? "সেকেন্ড" : "Seconds"} />
-
-          {/* মিলিসেকেন্ড বক্স */}
-          <Box value={language === 'bn' ? toBengaliNumber(timeLeft.milliseconds) : timeLeft.milliseconds} label={language === 'bn' ? "মিলিসেকেন্ড" : "Milliseconds"} />
         </div>
 
         {/* বাকি টেক্সট */}

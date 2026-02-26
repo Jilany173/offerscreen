@@ -52,6 +52,10 @@ const AutoScratchCard: React.FC = () => {
 
     useEffect(() => {
         if (gifts.length === 0) return;
+
+        // Clear any existing timers before setting a new one
+        clearTimer();
+
         // First popup: wait 5 seconds after load
         timerRef.current = setTimeout(() => runCycle(gifts), 5000);
         return () => clearTimer();
@@ -66,8 +70,8 @@ const AutoScratchCard: React.FC = () => {
         >
             <div
                 className={`relative transition-all duration-500 ${phase === 'showing' ? 'opacity-0 scale-75' :
-                        phase === 'scratching' ? 'opacity-100 scale-100' :
-                            'opacity-100 scale-110'
+                    phase === 'scratching' ? 'opacity-100 scale-100' :
+                        'opacity-100 scale-110'
                     }`}
             >
                 {/* Card */}
@@ -134,20 +138,17 @@ const AutoScratchCard: React.FC = () => {
                 </div>
 
                 {/* Shimmer ring animation */}
-                <div className={`absolute -inset-3 rounded-3xl border-4 border-yellow-400 opacity-70 ${phase === 'revealed' ? 'animate-ping' : ''}`} />
+                <div className={`absolute -inset-3 rounded-3xl border-4 border-yellow-400 opacity-70 ${phase === 'revealed' ? 'animate-pulse' : ''}`} />
             </div>
 
             <style>{`
         @keyframes goldenShimmer {
           0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
         }
         @keyframes scratchReveal {
           0%   { clip-path: inset(0 0 0 0); opacity: 1; }
-          30%  { clip-path: inset(0 60% 0 0); opacity: 0.8; }
-          60%  { clip-path: inset(0 0 0 70%); opacity: 0.5; }
-          80%  { clip-path: inset(40% 0 0 0); opacity: 0.3; }
+          50%  { clip-path: inset(0 50% 0 0); opacity: 0.8; }
           100% { clip-path: inset(0 0 100% 0); opacity: 0; }
         }
       `}</style>
