@@ -195,6 +195,18 @@
 
             document.addEventListener('click', enableNoSleep, false);
             document.addEventListener('touchstart', enableNoSleep, false);
+
+            // Hack: Auto trigger fake click to attempt bypassing TV interaction requirement
+            setTimeout(() => {
+                try {
+                    const event = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    document.body.dispatchEvent(event);
+                } catch (e) { }
+            }, 1000);
         });
     </script>
 </body>
