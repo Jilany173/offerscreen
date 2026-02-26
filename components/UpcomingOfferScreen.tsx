@@ -130,7 +130,7 @@ const UpcomingOfferScreen: React.FC<UpcomingOfferScreenProps> = ({ offer, langua
                     </div>
                 </div>
 
-                <div className="w-full relative z-40 bg-black">
+                <div className="w-full relative z-40 bg-transparent">
                     <GiftMarquee />
                 </div>
             </div>

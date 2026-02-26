@@ -154,17 +154,19 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
           ? (status === 'upcoming' ? 'শুরু হতে আর মাত্র......' : 'আর মাত্র......')
           : (status === 'upcoming' ? 'STARTS IN......' : 'ENDS IN......')}
       </div>
-      <div className="flex flex-wrap items-end justify-center lg:justify-start gap-3 md:gap-11">
-        <Box value={language === 'bn' ? toBengaliNumber(timeLeft.hours) : timeLeft.hours} label={language === 'bn' ? "ঘণ্টা" : "Hours"} />
-        <Box value={language === 'bn' ? toBengaliNumber(timeLeft.minutes) : timeLeft.minutes} label={language === 'bn' ? "মিনিট" : "Minutes"} />
-        <Box value={language === 'bn' ? toBengaliNumber(timeLeft.seconds) : timeLeft.seconds} label={language === 'bn' ? "সেকেন্ড" : "Seconds"} />
+      <div className="relative flex items-center justify-center lg:justify-start">
+        <div className="flex flex-wrap items-end justify-center lg:justify-start gap-3 md:gap-11">
+          <Box value={language === 'bn' ? toBengaliNumber(timeLeft.hours) : timeLeft.hours} label={language === 'bn' ? "ঘণ্টা" : "Hours"} />
+          <Box value={language === 'bn' ? toBengaliNumber(timeLeft.minutes) : timeLeft.minutes} label={language === 'bn' ? "মিনিট" : "Minutes"} />
+          <Box value={language === 'bn' ? toBengaliNumber(timeLeft.seconds) : timeLeft.seconds} label={language === 'bn' ? "সেকেন্ড" : "Seconds"} />
 
-        {/* মিলিসেকেন্ড বক্স */}
-        <Box value={language === 'bn' ? toBengaliNumber(timeLeft.milliseconds) : timeLeft.milliseconds} label={language === 'bn' ? "মিলিসেকেন্ড" : "Milliseconds"} />
+          {/* মিলিসেকেন্ড বক্স */}
+          <Box value={language === 'bn' ? toBengaliNumber(timeLeft.milliseconds) : timeLeft.milliseconds} label={language === 'bn' ? "মিলিসেকেন্ড" : "Milliseconds"} />
+        </div>
 
         {/* বাকি টেক্সট */}
         <div
-          className={`${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-5xl font-black mb-4 ${getLabelColor()}`}
+          className={`absolute -right-6 md:-right-12 lg:-right-16 top-1/2 transform translate-x-full -translate-y-1/2 flex items-center ${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-5xl font-black ${getLabelColor()}`}
           style={{ WebkitTextStroke: '0.5px white', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
         >
           {language === 'bn' ? 'বাকি...' : 'LEFT...'}

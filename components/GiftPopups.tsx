@@ -49,7 +49,7 @@ const GiftPopups: React.FC = () => {
                 transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] whitespace-nowrap
                 ${isVisible ? 'opacity-100 translate-x-[40px] scale-100 rotate-0' : 'opacity-0 translate-x-[500px] scale-90 rotate-3 pointer-events-none'}
             `}>
-                <div className="relative flex items-center gap-4 bg-[#2f6cef] p-3 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] overflow-hidden min-w-[280px]">
+                <div className="relative flex items-center gap-4 bg-[#2f6cef] p-3 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] overflow-hidden min-w-[310px]">
                     {/* Shimmer effect for premium feel */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
 
