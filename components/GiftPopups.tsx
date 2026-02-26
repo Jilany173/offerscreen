@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { fetchPopupGiftItems, GiftItem } from '../services/giftService';
 
 const GiftPopups: React.FC = () => {
@@ -14,29 +14,36 @@ const GiftPopups: React.FC = () => {
         loadGifts();
     }, []);
 
+    const timeoutRefs = useRef<{ hide?: ReturnType<typeof setTimeout>, next?: ReturnType<typeof setTimeout>, initial?: ReturnType<typeof setTimeout> }>({});
+
     useEffect(() => {
         if (visibleGifts.length === 0) return;
+
+        // Clean up previous timeouts before setting new ones
+        const clearAllTimeouts = () => {
+            if (timeoutRefs.current.hide) clearTimeout(timeoutRefs.current.hide);
+            if (timeoutRefs.current.next) clearTimeout(timeoutRefs.current.next);
+            if (timeoutRefs.current.initial) clearTimeout(timeoutRefs.current.initial);
+        };
+        clearAllTimeouts();
 
         const showNextGift = () => {
             setIsVisible(true);
 
             // Stay visible for 5 seconds
-            const hideTimeout = setTimeout(() => {
+            timeoutRefs.current.hide = setTimeout(() => {
                 setIsVisible(false);
 
                 // Wait 3 seconds before showing the next one
-                const nextTimeout = setTimeout(() => {
+                timeoutRefs.current.next = setTimeout(() => {
                     setCurrentGiftIndex((prev) => (prev + 1) % visibleGifts.length);
                 }, 3000);
-
-                return () => clearTimeout(nextTimeout);
             }, 5000);
-
-            return () => clearTimeout(hideTimeout);
         };
 
-        const initialTimeout = setTimeout(showNextGift, 2000);
-        return () => clearTimeout(initialTimeout);
+        timeoutRefs.current.initial = setTimeout(showNextGift, 2000);
+
+        return clearAllTimeouts;
     }, [visibleGifts, currentGiftIndex]);
 
     if (visibleGifts.length === 0) return null;
