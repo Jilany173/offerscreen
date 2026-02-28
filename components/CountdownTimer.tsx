@@ -115,24 +115,21 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
   };
 
   const Box = ({ value, label }: { value: string; label: string }) => {
-    // Dynamic font size based on number of digits and language
-    const isThreeDigits = value.length >= 3;
-
     let fontSizeClass = '';
     let fontFamilyClass = '';
 
     if (language === 'bn') {
-      fontSizeClass = isThreeDigits ? 'text-5xl md:text-6xl text-[4.5rem]' : 'text-6xl md:text-7xl lg:text-[5.5rem]';
+      fontSizeClass = 'text-6xl md:text-7xl lg:text-[5.5rem]';
       fontFamilyClass = 'font-bengali font-black';
     } else {
-      fontSizeClass = isThreeDigits ? 'text-5xl md:text-7xl lg:text-[6rem]' : 'text-6xl md:text-[6rem] lg:text-[7.5rem]';
+      fontSizeClass = 'text-6xl md:text-[6rem] lg:text-[7.5rem]';
       fontFamilyClass = 'font-poppins font-black'; // Poppins ExtraBold/Black
     }
 
     return (
       <div className="flex flex-col items-center">
-        <div className={`flex flex-col items-center justify-center border-4 rounded-xl md:rounded-3xl p-4 md:p-6 backdrop-blur-sm bg-[#FFFDF0] shadow-2xl w-28 md:w-48 h-36 md:h-64 transition-colors duration-500 border-[#B45309]/30`}>
-          <span className={`${fontSizeClass} ${fontFamilyClass} ${getNumberColor()} drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)] leading-none mb-2 md:mb-4 text-center flex items-center justify-center`} style={{ textShadow: '2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 0px 4px 10px rgba(0,0,0,0.5)' }}>
+        <div className={`flex flex-col items-center justify-center border-4 rounded-xl md:rounded-3xl p-4 md:p-6 backdrop-blur-sm bg-[#FFFDF0] shadow-2xl w-auto min-w-[7.5rem] md:min-w-[13rem] h-36 md:h-64 transition-colors duration-500 border-[#B45309]/30`}>
+          <span className={`${fontSizeClass} ${fontFamilyClass} ${getNumberColor()} drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)] leading-none mb-2 md:mb-4 text-center flex items-center justify-center whitespace-nowrap px-1 md:px-2`} style={{ textShadow: '2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 0px 4px 10px rgba(0,0,0,0.5)' }}>
             {/* Applying inner shadow logic */}
             <span className={language === 'bn' ? '' : 'inner-shadow-text'}>
               {value}
