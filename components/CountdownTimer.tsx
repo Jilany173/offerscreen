@@ -99,8 +99,8 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
 
   const getLabelColor = () => {
     if (status === 'upcoming') return 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]';
-    if (isLastHours) return 'text-red-600 animate-pulse drop-shadow-md';
-    return 'text-brand-red drop-shadow-md'; // Red for normal active as requested
+    if (isLastHours) return 'text-white animate-pulse drop-shadow-md';
+    return 'text-white drop-shadow-md'; // White as requested
   };
 
   const getBoxBorderColor = () => {
@@ -122,23 +122,23 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
     let fontFamilyClass = '';
 
     if (language === 'bn') {
-      fontSizeClass = isThreeDigits ? 'text-4xl md:text-5xl' : 'text-5xl md:text-6xl';
+      fontSizeClass = isThreeDigits ? 'text-5xl md:text-6xl text-[4.5rem]' : 'text-6xl md:text-7xl lg:text-[5.5rem]';
       fontFamilyClass = 'font-bengali font-black';
     } else {
-      fontSizeClass = isThreeDigits ? 'text-4xl md:text-6xl' : 'text-5xl md:text-7xl';
+      fontSizeClass = isThreeDigits ? 'text-5xl md:text-7xl lg:text-[6rem]' : 'text-6xl md:text-[6rem] lg:text-[7.5rem]';
       fontFamilyClass = 'font-poppins font-black'; // Poppins ExtraBold/Black
     }
 
     return (
       <div className="flex flex-col items-center">
-        <div className={`flex flex-col items-center justify-center border-4 rounded-xl md:rounded-3xl p-4 md:p-6 backdrop-blur-sm bg-[#FFFDF0] shadow-2xl w-24 md:w-40 h-32 md:h-56 transition-colors duration-500 border-[#B45309]/30`}>
-          <span className={`${fontSizeClass} ${fontFamilyClass} ${getNumberColor()} drop-shadow-md leading-tight text-center flex items-center justify-center`}>
+        <div className={`flex flex-col items-center justify-center border-4 rounded-xl md:rounded-3xl p-4 md:p-6 backdrop-blur-sm bg-[#FFFDF0] shadow-2xl w-28 md:w-48 h-36 md:h-64 transition-colors duration-500 border-[#B45309]/30`}>
+          <span className={`${fontSizeClass} ${fontFamilyClass} ${getNumberColor()} drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)] leading-none mb-2 md:mb-4 text-center flex items-center justify-center`} style={{ textShadow: '2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 0px 4px 10px rgba(0,0,0,0.5)' }}>
             {/* Applying inner shadow logic */}
             <span className={language === 'bn' ? '' : 'inner-shadow-text'}>
               {value}
             </span>
           </span>
-          <span className="text-sm md:text-base uppercase tracking-widest mt-2 text-slate-800 font-extrabold">{label}</span>
+          <span className="text-base md:text-xl uppercase tracking-widest mt-1 md:mt-2 text-slate-800 font-extrabold drop-shadow-sm">{label}</span>
         </div>
       </div>
     );
@@ -146,10 +146,10 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
 
 
   return (
-    <div className="flex flex-col items-center mt-6">
-      <div className="flex flex-col items-start">
+    <div className="flex flex-col items-center mt-6 w-full">
+      <div className="flex flex-col items-start w-full relative">
         <div
-          className={`${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-4xl font-extrabold tracking-[0.2em] mb-4 ${getLabelColor()}`}
+          className={`${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-[0.2em] mb-4 ${getLabelColor()} -ml-4 md:-ml-8 lg:-ml-12 drop-shadow-lg`}
           style={{ WebkitTextStroke: '0.5px white' }}
         >
           {language === 'bn'
@@ -157,7 +157,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
             : (status === 'upcoming' ? 'STARTS IN......' : 'ENDS IN......')}
         </div>
         <div className="relative flex items-center justify-center w-full">
-          <div className="flex flex-wrap items-end justify-center gap-6 md:gap-16">
+          <div className="flex flex-wrap items-end justify-center gap-8 md:gap-20">
             <Box value={language === 'bn' ? toBengaliNumber(timeLeft.hours) : timeLeft.hours} label={language === 'bn' ? "ঘণ্টা" : "Hours"} />
             <Box value={language === 'bn' ? toBengaliNumber(timeLeft.minutes) : timeLeft.minutes} label={language === 'bn' ? "মিনিট" : "Minutes"} />
             <Box value={language === 'bn' ? toBengaliNumber(timeLeft.seconds) : timeLeft.seconds} label={language === 'bn' ? "সেকেন্ড" : "Seconds"} />
@@ -165,7 +165,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime, endTime, lan
 
           {/* বাকি টেক্সট */}
           <div
-            className={`absolute -right-4 md:-right-8 lg:-right-16 bottom-0 md:bottom-2 transform translate-x-full flex items-center ${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-5xl font-black ${getLabelColor()}`}
+            className={`absolute -right-4 md:-right-8 lg:-right-16 bottom-0 md:bottom-2 transform translate-x-full flex items-center ${language === 'bn' ? 'font-bengali' : 'font-poppins'} text-3xl md:text-5xl lg:text-6xl font-black ${getLabelColor()}`}
             style={{ WebkitTextStroke: '0.5px white', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
           >
             {language === 'bn' ? 'বাকি...' : 'LEFT...'}

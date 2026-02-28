@@ -203,8 +203,8 @@ const OfferScreen: React.FC = () => {
 
 
                                 {/* Course Title (Dynamic) */}
-                                <div className="h-24 flex items-center justify-center mb-4">
-                                    <h2 className="text-2xl md:text-3xl font-black text-brand-blue text-center leading-tight drop-shadow-sm">
+                                <div className="min-h-[6rem] flex items-center justify-center mb-4 px-2">
+                                    <h2 className="text-3xl md:text-4xl lg:text-[2.5rem] font-black text-brand-blue text-center leading-tight drop-shadow-sm break-words whitespace-normal px-2">
                                         {displayTitle}
                                     </h2>
                                 </div>
