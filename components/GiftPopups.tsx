@@ -51,7 +51,7 @@ const GiftPopups: React.FC = () => {
     const currentGift = visibleGifts[currentGiftIndex];
 
     return (
-        <div className="fixed top-[50%] -translate-y-1/2 -right-4 z-[9999] perspective-1000">
+        <div className="fixed top-[35%] -translate-y-1/2 -right-4 z-[9999] perspective-1000">
             <div className={`
                 transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] whitespace-nowrap
                 ${isVisible ? 'opacity-100 translate-x-[40px] scale-100 rotate-0' : 'opacity-0 translate-x-[500px] scale-90 rotate-3 pointer-events-none'}
