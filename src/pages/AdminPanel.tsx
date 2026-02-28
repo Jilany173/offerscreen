@@ -347,17 +347,35 @@ const AdminPanel: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Card Rotation Interval (Seconds)</label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            value={editingTheme?.card_rotation_interval || 6}
-                                            onChange={(e) => setEditingTheme(prev => ({ ...prev!, card_rotation_interval: Number(e.target.value) }))}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
-                                            placeholder="e.g. 6"
-                                        />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-2">Card Rotation Interval (Seconds)</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                step="1"
+                                                value={editingTheme?.card_rotation_interval || 6}
+                                                onChange={(e) => setEditingTheme(prev => ({ ...prev!, card_rotation_interval: Number(e.target.value) }))}
+                                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
+                                                placeholder="e.g. 6"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-2">Auto Reload Interval (Minutes)</label>
+                                            <select
+                                                value={editingTheme?.auto_reload_interval || 20}
+                                                onChange={(e) => setEditingTheme(prev => ({ ...prev!, auto_reload_interval: Number(e.target.value) }))}
+                                                className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700 focus:ring-2 focus:ring-brand-blue"
+                                            >
+                                                <option value={1}>1 Minute</option>
+                                                <option value={5}>5 Minutes</option>
+                                                <option value={10}>10 Minutes</option>
+                                                <option value={15}>15 Minutes</option>
+                                                <option value={20}>20 Minutes</option>
+                                                <option value={25}>25 Minutes</option>
+                                                <option value={30}>30 Minutes</option>
+                                            </select>
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">

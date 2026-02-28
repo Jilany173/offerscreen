@@ -10,6 +10,7 @@ export interface ThemeSettings {
     show_gift_marquee: boolean;
     show_gift_popups: boolean;
     card_rotation_interval: number;
+    auto_reload_interval?: number;
     is_active: boolean;
 }
 
@@ -32,6 +33,7 @@ export const fetchActiveTheme = async (): Promise<ThemeSettings | null> => {
             show_gift_marquee: true,
             show_gift_popups: true,
             card_rotation_interval: 6,
+            auto_reload_interval: 20,
             is_active: true
         };
     }
@@ -64,6 +66,7 @@ export const createTheme = async (theme: ThemeSettings): Promise<ThemeSettings |
             show_gift_marquee: theme.show_gift_marquee ?? true,
             show_gift_popups: theme.show_gift_popups ?? true,
             card_rotation_interval: theme.card_rotation_interval ?? 6,
+            auto_reload_interval: theme.auto_reload_interval ?? 20,
             is_active: false // Default to inactive when creating
         }])
         .select()

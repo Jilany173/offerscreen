@@ -119,6 +119,17 @@ const OfferScreen: React.FC = () => {
         }
     }, [courses, isEnded, themeSettings?.card_rotation_interval]);
 
+    // Periodic Hard Reload to prevent TV Browser freezing (configurable via Admin Panel)
+    useEffect(() => {
+        const intervalMinutes = themeSettings?.auto_reload_interval || 20; // Default to 20 minutes
+        const reloadInterval = setInterval(() => {
+            console.log(`Performing periodic hard reload to prevent freezing (every ${intervalMinutes} minutes)...`);
+            window.location.reload();
+        }, intervalMinutes * 60 * 1000);
+
+        return () => clearInterval(reloadInterval);
+    }, [themeSettings?.auto_reload_interval]);
+
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center text-brand-blue text-2xl animate-pulse">Loading...</div>;
     }
