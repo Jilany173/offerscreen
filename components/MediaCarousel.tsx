@@ -77,17 +77,20 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ onEmpty }) => {
     return (
         <div className="w-full h-screen bg-black relative overflow-hidden flex items-center justify-center">
             
-            {/* Preload Next Media In Background */}
-            {mediaItems.length > 1 && mediaItems[(currentIndex + 1) % mediaItems.length].type === 'video' && (
-                <video 
-                    src={mediaItems[(currentIndex + 1) % mediaItems.length].media_url} 
-                    preload="auto" 
-                    className="hidden" 
-                />
-            )}
-            {mediaItems.length > 1 && mediaItems[(currentIndex + 1) % mediaItems.length].type === 'image' && (
-                <link rel="preload" as="image" href={mediaItems[(currentIndex + 1) % mediaItems.length].media_url} />
-            )}
+            {/* AGGRESSIVE PRELOADER: Preloads the NEXT media while current is playing */}
+            <div className="hidden pointer-events-none" aria-hidden="true">
+                {mediaItems.length > 1 && mediaItems[(currentIndex + 1) % mediaItems.length].type === 'video' ? (
+                    <video 
+                        src={mediaItems[(currentIndex + 1) % mediaItems.length].media_url} 
+                        preload="auto" 
+                        muted 
+                    />
+                ) : mediaItems.length > 1 ? (
+                    <img 
+                        src={mediaItems[(currentIndex + 1) % mediaItems.length].media_url} 
+                    />
+                ) : null}
+            </div>
 
             {/* Display Current Media */}
             <div key={currentMedia.id + currentIndex} className="w-full h-full absolute inset-0 animate-fade-in flex items-center justify-center bg-black">
@@ -101,6 +104,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ onEmpty }) => {
                             muted
                             loop
                             playsInline
+                            preload="auto"
                         />
                     ) : (
                         <div 
@@ -120,6 +124,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ onEmpty }) => {
                             autoPlay
                             muted={!currentMedia.play_with_sound}
                             playsInline
+                            preload="auto"
                             onEnded={goToNext}
                             onError={goToNext}
                         />
