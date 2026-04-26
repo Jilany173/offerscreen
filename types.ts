@@ -34,3 +34,15 @@ export interface Offer {
 export interface OfferWithCourses extends Offer {
   courses: Course[];
 }
+
+export interface MediaItem {
+  id: string;
+  type: 'image' | 'video';
+  media_url: string;
+  duration_seconds: number;
+  play_with_sound: boolean;
+  is_active: boolean;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
+}

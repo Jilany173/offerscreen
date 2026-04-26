@@ -3,6 +3,9 @@ import { fetchAllOffers, createOffer, updateOffer, deleteOffer, fetchCoursesForO
 import { fetchAllThemes, createTheme, updateTheme, deleteTheme, setActiveTheme, ThemeSettings } from '../../services/themeService';
 import { fetchAllGiftItems, addGiftItem, updateGiftItem, deleteGiftItem, uploadGiftImage, deleteGiftImage, GiftItem } from '../../services/giftService';
 import { fetchBackgrounds, addBackground, deleteBackground, uploadBackgroundImage, setActiveBackground, BackgroundImage } from '../../services/backgroundService';
+import { fetchAllPromotions, createPromotion, updatePromotion, deletePromotion, Promotion } from '../../services/promotionService';
+import { fetchAllAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement, ResultAnnouncement } from '../../services/resultService';
+import MediaManager from '../../components/admin/MediaManager';
 import { Offer, Course } from '../../types';
 
 const AdminPanel: React.FC = () => {
@@ -12,7 +15,8 @@ const AdminPanel: React.FC = () => {
     };
 
     // --- State ---
-    const [activeTab, setActiveTab] = useState<'campaigns' | 'theme' | 'gifts' | 'background'>('campaigns');
+    const [activeTab, setActiveTab] = useState<'campaigns' | 'theme' | 'promotions' | 'results' | 'playlist'>('playlist');
+    const [themeSubTab, setThemeSubTab] = useState<'library' | 'gifts' | 'background'>('library');
     const [loading, setLoading] = useState(true);
 
     // Campaign state
@@ -41,11 +45,21 @@ const AdminPanel: React.FC = () => {
     const [bgSaving, setBgSaving] = useState(false);
     const bgFileInputRef = useRef<HTMLInputElement>(null);
 
+    // Promotions state
+    const [promotions, setPromotions] = useState<Promotion[]>([]);
+    const [editingPromotion, setEditingPromotion] = useState<Partial<Promotion> | null>(null);
+    const [promoSaving, setPromoSaving] = useState(false);
+
+    // Results state
+    const [announcements, setAnnouncements] = useState<ResultAnnouncement[]>([]);
+    const [editingAnnouncement, setEditingAnnouncement] = useState<Partial<ResultAnnouncement> | null>(null);
+    const [annSaving, setAnnSaving] = useState(false);
+
     useEffect(() => { loadData(); }, []);
 
     const loadData = async () => {
         setLoading(true);
-        await Promise.all([loadOffers(), loadThemes(), loadGifts(), loadBackgrounds()]);
+        await Promise.all([loadOffers(), loadThemes(), loadGifts(), loadBackgrounds(), loadPromotions(), loadAnnouncements()]);
         setLoading(false);
     };
 
@@ -54,6 +68,9 @@ const AdminPanel: React.FC = () => {
     const loadThemes = async () => setAllThemes(await fetchAllThemes());
     const loadGifts = async () => setGifts(await fetchAllGiftItems());
     const loadBackgrounds = async () => setBackgrounds(await fetchBackgrounds());
+    const loadPromotions = async () => setPromotions(await fetchAllPromotions());
+    const loadAnnouncements = async () => setAnnouncements(await fetchAllAnnouncements());
+
 
     const refreshCourses = async (offerId: string) => {
         const offerCourses = await fetchCoursesForOffer(offerId);
@@ -222,189 +239,510 @@ const AdminPanel: React.FC = () => {
             <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
 
             {/* Tabs */}
-            <div className="flex border-b mb-6">
+            <div className="flex border-b mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
                 <button
-                    className={`px-6 py-2 font-medium ${activeTab === 'campaigns' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'playlist' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('playlist')}
+                >
+                    📺 Digital Signage Playlist
+                </button>
+                <button
+                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'campaigns' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                     onClick={() => setActiveTab('campaigns')}
                 >
                     Campaigns
                 </button>
                 <button
-                    className={`px-6 py-2 font-medium ${activeTab === 'theme' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'theme' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                     onClick={() => setActiveTab('theme')}
                 >
-                    Theme Settings
+                    Theme & Style Settings
                 </button>
                 <button
-                    className={`px-6 py-2 font-medium ${activeTab === 'gifts' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                    onClick={() => setActiveTab('gifts')}
+                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'promotions' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('promotions')}
                 >
-                    🎁 Gift Items
+                    📢 Promotions
                 </button>
                 <button
-                    className={`px-6 py-2 font-medium ${activeTab === 'background' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                    onClick={() => setActiveTab('background')}
+                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'results' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('results')}
                 >
-                    🖼️ Background
+                    📊 Results
                 </button>
             </div>
 
-            {/* ======================== THEME TAB ======================== */}
+            {/* ======================== PLAYLIST TAB ======================== */}
+            {activeTab === 'playlist' && <MediaManager />}
+
+            {/* ======================== THEME & STYLE SETTINGS (CONSOLIDATED) ======================== */}
             {activeTab === 'theme' && (
-                <div>
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Theme Library</h2>
-                        <button onClick={handleAddTheme} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
-                            + Add New Theme
+                <div className="animate-fade-in">
+                    
+                    {/* Sub-Tabs for Theme Section */}
+                    <div className="flex gap-4 mb-8 bg-white p-2 rounded-2xl shadow-sm border border-gray-100 w-max">
+                        <button 
+                            onClick={() => setThemeSubTab('library')}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${themeSubTab === 'library' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                        >
+                            🎨 Theme Library
+                        </button>
+                        <button 
+                            onClick={() => setThemeSubTab('gifts')}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${themeSubTab === 'gifts' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                        >
+                            🎁 Gift Items
+                        </button>
+                        <button 
+                            onClick={() => setThemeSubTab('background')}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${themeSubTab === 'background' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                        >
+                            🖼️ Background
                         </button>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10">
-                        {allThemes.map((theme) => (
-                            <div key={theme.id} className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${theme.is_active ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100 hover:border-gray-300'}`}>
-                                <div className={`h-32 w-full flex items-center justify-center relative ${theme.background_style === 'theme-2' ? 'bg-gray-800' : 'bg-brand-blue/5'}`}>
-                                    {theme.background_style === 'theme-2' && <img src="/bg-theme-2.png" alt="Theme 2" className="absolute inset-0 w-full h-full object-cover opacity-50" />}
-                                    {theme.background_style === 'default' && <div className="text-gray-400 font-medium">Default Pattern</div>}
-                                    {theme.is_active && (
-                                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">ACTIVE</div>
-                                    )}
-                                </div>
-                                <div className="p-5">
-                                    <div className="mb-4">
-                                        <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{theme.header_text_1 || "Untitled"}</h3>
-                                        <p className="text-sm text-gray-500">{theme.header_text_2}</p>
-                                    </div>
-                                    <div className="flex gap-2 mt-4">
-                                        {!theme.is_active && (
-                                            <button onClick={() => handleActivateTheme(theme.id!)} className="flex-1 py-2 text-sm font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded-lg">
-                                                Activate
-                                            </button>
-                                        )}
-                                        <button onClick={() => setEditingTheme(theme)} className="flex-1 py-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg">
-                                            Edit
-                                        </button>
-                                        <button onClick={() => handleDeleteTheme(theme.id!)} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete Theme">
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </div>
+
+                    {/* Sub-Tab Content: Theme Library */}
+                    {themeSubTab === 'library' && (
+                        <div>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Theme Library</h2>
+                                <button onClick={handleAddTheme} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
+                                    + Add New Theme
+                                </button>
                             </div>
-                        ))}
-                    </div>
 
-                    {/* Edit/Create Theme Modal */}
-                    {(editingTheme || isCreatingTheme) && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl relative">
+                            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10">
+                                {allThemes.map((theme) => (
+                                    <div key={theme.id} className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${theme.is_active ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100 hover:border-gray-300'}`}>
+                                        <div className={`h-32 w-full flex items-center justify-center relative ${theme.background_style === 'theme-2' ? 'bg-gray-800' : 'bg-brand-blue/5'}`}>
+                                            {theme.background_style === 'theme-2' && <img src="/bg-theme-2.png" alt="Theme 2" className="absolute inset-0 w-full h-full object-cover opacity-50" />}
+                                            {theme.background_style === 'default' && <div className="text-gray-400 font-medium">Default Pattern</div>}
+                                            {theme.is_active && (
+                                                <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">ACTIVE</div>
+                                            )}
+                                        </div>
+                                        <div className="p-5">
+                                            <div className="mb-4">
+                                                <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{theme.header_text_1 || "Untitled"}</h3>
+                                                <p className="text-sm text-gray-500">{theme.header_text_2}</p>
+                                            </div>
+                                            <div className="flex gap-2 mt-4">
+                                                {!theme.is_active && (
+                                                    <button onClick={() => handleActivateTheme(theme.id!)} className="flex-1 py-2 text-sm font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded-lg">
+                                                        Activate
+                                                    </button>
+                                                )}
+                                                <button onClick={() => setEditingTheme(theme)} className="flex-1 py-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg">
+                                                    Edit
+                                                </button>
+                                                <button onClick={() => handleDeleteTheme(theme.id!)} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete Theme">
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Edit/Create Theme Modal */}
+                            {(editingTheme || isCreatingTheme) && (
+                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                    <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl relative">
+                                        <button
+                                            onClick={() => { setEditingTheme(null); setIsCreatingTheme(false); }}
+                                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                                        >✕</button>
+                                        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+                                            {isCreatingTheme ? 'Create New Theme' : 'Edit Theme'}
+                                        </h2>
+                                        <form onSubmit={handleSaveTheme} className="space-y-6">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Top Header Text</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingTheme?.header_text_1 || ''}
+                                                    onChange={(e) => setEditingTheme(prev => ({ ...prev!, header_text_1: e.target.value }))}
+                                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
+                                                    placeholder="e.g. Ramadan Special"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Highlighted Text (Animated)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingTheme?.header_text_2 || ''}
+                                                    onChange={(e) => setEditingTheme(prev => ({ ...prev!, header_text_2: e.target.value }))}
+                                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
+                                                    placeholder="e.g. 150 Hours"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Background Style</label>
+                                                <select
+                                                    value={editingTheme?.background_style || 'default'}
+                                                    onChange={(e) => setEditingTheme(prev => ({ ...prev!, background_style: e.target.value }))}
+                                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700"
+                                                >
+                                                    <option value="default">Default (Blue Grid Pattern)</option>
+                                                    <option value="theme-2">Theme 2 (Ramadan Image)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Countdown Language</label>
+                                                <select
+                                                    value={editingTheme?.timer_language || 'bn'}
+                                                    onChange={(e) => setEditingTheme(prev => ({ ...prev!, timer_language: e.target.value as 'en' | 'bn' }))}
+                                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700"
+                                                >
+                                                    <option value="bn">Bengali (বাংলা)</option>
+                                                    <option value="en">English</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Card Rotation Interval (Seconds)</label>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        step="1"
+                                                        value={editingTheme?.card_rotation_interval || 6}
+                                                        onChange={(e) => setEditingTheme(prev => ({ ...prev!, card_rotation_interval: Number(e.target.value) }))}
+                                                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
+                                                        placeholder="e.g. 6"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Auto Reload Interval (Minutes)</label>
+                                                    <select
+                                                        value={editingTheme?.auto_reload_interval || 20}
+                                                        onChange={(e) => setEditingTheme(prev => ({ ...prev!, auto_reload_interval: Number(e.target.value) }))}
+                                                        className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700 focus:ring-2 focus:ring-brand-blue"
+                                                    >
+                                                        <option value={1}>1 Minute</option>
+                                                        <option value={5}>5 Minutes</option>
+                                                        <option value={10}>10 Minutes</option>
+                                                        <option value={15}>15 Minutes</option>
+                                                        <option value={20}>20 Minutes</option>
+                                                        <option value={25}>25 Minutes</option>
+                                                        <option value={30}>30 Minutes</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="show_marquee"
+                                                        checked={editingTheme?.show_gift_marquee ?? true}
+                                                        onChange={(e) => setEditingTheme(prev => ({ ...prev!, show_gift_marquee: e.target.checked }))}
+                                                        className="h-5 w-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                                                    />
+                                                    <label htmlFor="show_marquee" className="text-sm font-bold text-gray-700 cursor-pointer">Show Marquee</label>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="show_popups"
+                                                        checked={editingTheme?.show_gift_popups ?? true}
+                                                        onChange={(e) => setEditingTheme(prev => ({ ...prev!, show_gift_popups: e.target.checked }))}
+                                                        className="h-5 w-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                                                    />
+                                                    <label htmlFor="show_popups" className="text-sm font-bold text-gray-700 cursor-pointer">Show Popups</label>
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" className="w-full py-4 bg-brand-blue text-white rounded-xl font-bold text-lg hover:bg-brand-red transition-colors shadow-lg mt-4">
+                                                {isCreatingTheme ? 'Create Theme' : 'Save Changes'}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+
+                    {/* Sub-Tab Content: Gift Items */}
+                    {themeSubTab === 'gifts' && (
+                        <div className="animate-fade-in">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Gift Items</h2>
                                 <button
-                                    onClick={() => { setEditingTheme(null); setIsCreatingTheme(false); }}
-                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                                >✕</button>
-                                <h2 className="text-2xl font-bold mb-6 text-gray-800">
-                                    {isCreatingTheme ? 'Create New Theme' : 'Edit Theme'}
-                                </h2>
-                                <form onSubmit={handleSaveTheme} className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Top Header Text</label>
+                                    onClick={() => {
+                                        setEditingGift({ name: '', emoji: '🎁', is_visible: true, show_in_popup: false, sort_order: gifts.length + 1 });
+                                        setGiftImageFile(null);
+                                        setGiftImagePreview(null);
+                                    }}
+                                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                                >
+                                    + Add Gift Item
+                                </button>
+                            </div>
+
+                            {/* Gift Form Modal */}
+                            {editingGift && (
+                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                    <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl relative">
+                                        <button
+                                            onClick={() => { setEditingGift(null); setGiftImageFile(null); setGiftImagePreview(null); }}
+                                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+                                        >✕</button>
+                                        <h2 className="text-xl font-bold mb-6 text-gray-800">
+                                            {editingGift.id ? 'Edit Gift Item' : 'New Gift Item'}
+                                        </h2>
+                                        <form
+                                            onSubmit={async (e) => {
+                                                e.preventDefault();
+                                                setGiftSaving(true);
+                                                let imageUrl = editingGift.image_url;
+                                                if (giftImageFile) {
+                                                    const tempId = editingGift.id || crypto.randomUUID();
+                                                    imageUrl = await uploadGiftImage(giftImageFile, tempId) || undefined;
+                                                }
+                                                const payload = { ...editingGift, image_url: imageUrl } as GiftItem;
+                                                if (editingGift.id) {
+                                                    await updateGiftItem(editingGift.id, payload);
+                                                } else {
+                                                    await addGiftItem({
+                                                        name: payload.name || '',
+                                                        emoji: payload.emoji || '🎁',
+                                                        image_url: payload.image_url,
+                                                        is_visible: payload.is_visible ?? true,
+                                                        show_in_popup: payload.show_in_popup ?? false,
+                                                        sort_order: payload.sort_order || 0,
+                                                    });
+                                                }
+                                                setEditingGift(null);
+                                                setGiftImageFile(null);
+                                                setGiftImagePreview(null);
+                                                setGiftSaving(false);
+                                                loadGifts();
+                                            }}
+                                            className="space-y-4"
+                                        >
+                                            {/* Image Upload */}
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">গিফটের ছবি (ঐচ্ছিক)</label>
+                                                <div className="flex items-center gap-4">
+                                                    <div
+                                                        className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-indigo-400 transition-colors bg-gray-50"
+                                                        onClick={() => giftFileInputRef.current?.click()}
+                                                    >
+                                                        {giftImagePreview || editingGift.image_url ? (
+                                                            <img src={giftImagePreview || editingGift.image_url} alt="preview" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <span className="text-3xl">{editingGift.emoji || '🎁'}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <button type="button" onClick={() => giftFileInputRef.current?.click()} className="w-full py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+                                                            📁 ছবি আপলোড করুন
+                                                        </button>
+                                                        {(giftImagePreview || editingGift.image_url) && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => { setGiftImageFile(null); setGiftImagePreview(null); setEditingGift(prev => prev ? { ...prev, image_url: undefined } : null); }}
+                                                                className="w-full mt-1 py-1 text-xs text-red-500 hover:text-red-700"
+                                                            >
+                                                                🗑️ ছবি সরান
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <input ref={giftFileInputRef} type="file" accept="image/*" className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) { setGiftImageFile(file); setGiftImagePreview(URL.createObjectURL(file)); }
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-1">গিফটের নাম *</label>
+                                                    <input type="text" required value={editingGift.name || ''} onChange={e => setEditingGift(prev => ({ ...prev!, name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" placeholder="স্মার্টফোন" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-1">ইমোজি</label>
+                                                    <input type="text" value={editingGift.emoji || '🎁'} onChange={e => setEditingGift(prev => ({ ...prev!, emoji: e.target.value }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" placeholder="🎁" />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-1">সর্ট অর্ডার</label>
+                                                    <input type="number" value={editingGift.sort_order || 0} onChange={e => setEditingGift(prev => ({ ...prev!, sort_order: Number(e.target.value) }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" />
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-6">
+                                                    <input type="checkbox" id="gift-visible" checked={editingGift.is_visible ?? true} onChange={e => setEditingGift(prev => ({ ...prev!, is_visible: e.target.checked }))} className="h-5 w-5" />
+                                                    <label htmlFor="gift-visible" className="text-sm font-bold text-gray-700">স্ক্রিনে দেখাবে</label>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 py-2 px-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                <input type="checkbox" id="gift-popup" checked={editingGift.show_in_popup ?? false} onChange={e => setEditingGift(prev => ({ ...prev!, show_in_popup: e.target.checked }))} className="h-5 w-5 text-blue-600" />
+                                                <label htmlFor="gift-popup" className="text-sm font-bold text-blue-700 font-bengali">পপ-আপ এ দেখাবে (Pop-up Display)</label>
+                                            </div>
+
+                                            <button type="submit" disabled={giftSaving} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition disabled:opacity-50 mt-4">
+                                                {giftSaving ? 'সংরক্ষণ করছে...' : (editingGift.id ? 'আপডেট করুন' : 'যোগ করুন')}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Gift Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                                {gifts.map((gift) => (
+                                    <div key={gift.id} className={`bg-white rounded-xl shadow border-2 overflow-hidden transition-all ${gift.is_visible ? 'border-green-200' : 'border-gray-200 opacity-60'}`}>
+                                        <div className="h-32 flex items-center justify-center bg-gray-50">
+                                            {gift.image_url ? (
+                                                <img src={gift.image_url} alt={gift.name} className="h-full w-full object-contain p-2" />
+                                            ) : (
+                                                <span className="text-5xl">{gift.emoji}</span>
+                                            )}
+                                            {gift.show_in_popup && (
+                                                <div className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm animate-pulse z-10">
+                                                    POPUP
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-3">
+                                            <p className="font-bold text-sm text-gray-800 text-center truncate font-bengali">{gift.name}</p>
+                                            <p className="text-xs text-center text-gray-400 mt-1">#{gift.sort_order}</p>
+                                            <div className="flex flex-col gap-2 mt-3">
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={async () => { await updateGiftItem(gift.id, { is_visible: !gift.is_visible }); loadGifts(); }}
+                                                        className={`flex-1 py-1 rounded text-xs font-bold transition ${gift.is_visible ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                                    >
+                                                        {gift.is_visible ? '👁 দেখা যায়' : '🚫 লুকানো'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { setEditingGift(gift); setGiftImagePreview(null); setGiftImageFile(null); }}
+                                                        className="px-2 py-1 rounded text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold"
+                                                    >✏️</button>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (window.confirm(`"${gift.name}" মুছে ফেলবেন?`)) {
+                                                                if (gift.image_url) await deleteGiftImage(gift.image_url);
+                                                                await deleteGiftItem(gift.id);
+                                                                loadGifts();
+                                                            }
+                                                        }}
+                                                        className="px-2 py-1 rounded text-xs bg-red-50 text-red-500 hover:bg-red-100 font-bold"
+                                                    >🗑️</button>
+                                                </div>
+                                                <button
+                                                    onClick={async () => { await updateGiftItem(gift.id, { show_in_popup: !gift.show_in_popup }); loadGifts(); }}
+                                                    className={`w-full py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${gift.show_in_popup ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100'}`}
+                                                >
+                                                    {gift.show_in_popup ? '⚡ পপ-আপ চালু' : '💨 পপ-আপ অফ'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {gifts.length === 0 && (
+                                    <div className="col-span-full text-center py-12 text-gray-400">
+                                        কোনো গিফট আইটেম নেই। উপরের বাটনে ক্লিক করে যোগ করুন।
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Sub-Tab Content: Background Management */}
+                    {themeSubTab === 'background' && (
+                        <div className="animate-fade-in">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Background Management</h2>
+                            </div>
+
+                            {/* Upload Section */}
+                            <div className="bg-white rounded-xl shadow-md p-6 mb-10 border border-gray-100">
+                                <h3 className="text-lg font-bold text-gray-800 mb-4">Upload New Background</h3>
+                                <form onSubmit={handleBgUpload} className="flex flex-col md:flex-row gap-4 items-end">
+                                    <div className="flex-grow w-full">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Image</label>
                                         <input
-                                            type="text"
-                                            value={editingTheme?.header_text_1 || ''}
-                                            onChange={(e) => setEditingTheme(prev => ({ ...prev!, header_text_1: e.target.value }))}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
-                                            placeholder="e.g. Ramadan Special"
+                                            type="file"
+                                            accept="image/*"
+                                            ref={bgFileInputRef}
+                                            onChange={(e) => setBgImageFile(e.target.files?.[0] || null)}
+                                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-blue/10 file:text-brand-blue hover:file:bg-brand-blue/20"
+                                            required
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Highlighted Text (Animated)</label>
-                                        <input
-                                            type="text"
-                                            value={editingTheme?.header_text_2 || ''}
-                                            onChange={(e) => setEditingTheme(prev => ({ ...prev!, header_text_2: e.target.value }))}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
-                                            placeholder="e.g. 150 Hours"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Background Style</label>
-                                        <select
-                                            value={editingTheme?.background_style || 'default'}
-                                            onChange={(e) => setEditingTheme(prev => ({ ...prev!, background_style: e.target.value }))}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700"
-                                        >
-                                            <option value="default">Default (Blue Grid Pattern)</option>
-                                            <option value="theme-2">Theme 2 (Ramadan Image)</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Countdown Language</label>
-                                        <select
-                                            value={editingTheme?.timer_language || 'bn'}
-                                            onChange={(e) => setEditingTheme(prev => ({ ...prev!, timer_language: e.target.value as 'en' | 'bn' }))}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700"
-                                        >
-                                            <option value="bn">Bengali (বাংলা)</option>
-                                            <option value="en">English</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Card Rotation Interval (Seconds)</label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                step="1"
-                                                value={editingTheme?.card_rotation_interval || 6}
-                                                onChange={(e) => setEditingTheme(prev => ({ ...prev!, card_rotation_interval: Number(e.target.value) }))}
-                                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-blue outline-none"
-                                                placeholder="e.g. 6"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Auto Reload Interval (Minutes)</label>
-                                            <select
-                                                value={editingTheme?.auto_reload_interval || 20}
-                                                onChange={(e) => setEditingTheme(prev => ({ ...prev!, auto_reload_interval: Number(e.target.value) }))}
-                                                className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none bg-white font-medium text-gray-700 focus:ring-2 focus:ring-brand-blue"
-                                            >
-                                                <option value={1}>1 Minute</option>
-                                                <option value={5}>5 Minutes</option>
-                                                <option value={10}>10 Minutes</option>
-                                                <option value={15}>15 Minutes</option>
-                                                <option value={20}>20 Minutes</option>
-                                                <option value={25}>25 Minutes</option>
-                                                <option value={30}>30 Minutes</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="checkbox"
-                                                id="show_marquee"
-                                                checked={editingTheme?.show_gift_marquee ?? true}
-                                                onChange={(e) => setEditingTheme(prev => ({ ...prev!, show_gift_marquee: e.target.checked }))}
-                                                className="h-5 w-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
-                                            />
-                                            <label htmlFor="show_marquee" className="text-sm font-bold text-gray-700 cursor-pointer">Show Marquee</label>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="checkbox"
-                                                id="show_popups"
-                                                checked={editingTheme?.show_gift_popups ?? true}
-                                                onChange={(e) => setEditingTheme(prev => ({ ...prev!, show_gift_popups: e.target.checked }))}
-                                                className="h-5 w-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
-                                            />
-                                            <label htmlFor="show_popups" className="text-sm font-bold text-gray-700 cursor-pointer">Show Popups</label>
-                                        </div>
-                                    </div>
-
-                                    <button type="submit" className="w-full py-4 bg-brand-blue text-white rounded-xl font-bold text-lg hover:bg-brand-red transition-colors shadow-lg mt-4">
-                                        {isCreatingTheme ? 'Create Theme' : 'Save Changes'}
+                                    <button
+                                        type="submit"
+                                        disabled={bgSaving || !bgImageFile}
+                                        className="px-8 py-3 bg-brand-blue text-white rounded-xl font-bold hover:bg-brand-red transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {bgSaving ? 'Uploading...' : 'Upload & Save'}
                                     </button>
                                 </form>
+                            </div>
+
+                            {/* Background Grid */}
+                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {/* Default Option (No Custom Background) */}
+                                <div className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${backgrounds.every(b => !b.is_active) ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100'}`}>
+                                    <div className="h-40 bg-gray-100 flex items-center justify-center">
+                                        <span className="text-gray-400 font-medium">Theme Default</span>
+                                    </div>
+                                    <div className="p-4">
+                                        <h4 className="font-bold text-gray-800 mb-3">No Background</h4>
+                                        {backgrounds.some(b => b.is_active) ? (
+                                            <button
+                                                onClick={() => handleActivateBackground(null)}
+                                                className="w-full py-2 text-sm font-bold text-brand-blue bg-brand-blue/5 hover:bg-brand-blue/10 rounded-lg"
+                                            >
+                                                Use Default
+                                            </button>
+                                        ) : (
+                                            <div className="w-full py-2 text-sm font-bold text-green-600 bg-green-50 text-center rounded-lg">
+                                                ACTIVE
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Custom Backgrounds */}
+                                {backgrounds.map((bg) => (
+                                    <div key={bg.id} className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${bg.is_active ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100 hover:border-gray-300'}`}>
+                                        <div className="h-40 relative group">
+                                            <img src={bg.image_url} alt={bg.name} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <button
+                                                    onClick={() => handleBgDelete(bg)}
+                                                    className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                            {bg.is_active && (
+                                                <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">ACTIVE</div>
+                                            )}
+                                        </div>
+                                        <div className="p-4">
+                                            <h4 className="font-bold text-gray-800 mb-3 line-clamp-1" title={bg.name}>{bg.name}</h4>
+                                            {!bg.is_active && (
+                                                <button
+                                                    onClick={() => handleActivateBackground(bg.id)}
+                                                    className="w-full py-2 text-sm font-bold text-brand-blue bg-brand-blue/5 hover:bg-brand-blue/10 rounded-lg"
+                                                >
+                                                    Activate
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -589,284 +927,265 @@ const AdminPanel: React.FC = () => {
                 </>
             )}
 
-            {/* ======================== GIFTS TAB ======================== */}
-            {activeTab === 'gifts' && (
+
+
+            {/* ======================== PROMOTIONS TAB ======================== */}
+            {activeTab === 'promotions' && (
                 <div>
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Gift Items</h2>
-                        <button
-                            onClick={() => {
-                                setEditingGift({ name: '', emoji: '🎁', is_visible: true, show_in_popup: false, sort_order: gifts.length + 1 });
-                                setGiftImageFile(null);
-                                setGiftImagePreview(null);
-                            }}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
-                        >
-                            + Add Gift Item
-                        </button>
+                        <h2 className="text-2xl font-bold text-gray-800">প্রমোশন ম্যানেজমেন্ট</h2>
+                        <div className="flex gap-3">
+                            <a href="/promotions" target="_blank" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm">🖥️ স্ক্রিন দেখুন</a>
+                            <button
+                                onClick={() => setEditingPromotion({ title: '', subtitle: '', content: '', type: 'notice', emoji: '📢', is_active: true, sort_order: promotions.length + 1 })}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                            >+ নতুন প্রমোশন</button>
+                        </div>
                     </div>
 
-                    {/* Gift Form Modal */}
-                    {editingGift && (
+                    {/* Promotion Form Modal */}
+                    {editingPromotion !== null && (
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl relative">
-                                <button
-                                    onClick={() => { setEditingGift(null); setGiftImageFile(null); setGiftImagePreview(null); }}
-                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
-                                >✕</button>
-                                <h2 className="text-xl font-bold mb-6 text-gray-800">
-                                    {editingGift.id ? 'Edit Gift Item' : 'New Gift Item'}
-                                </h2>
+                            <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto">
+                                <button onClick={() => setEditingPromotion(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">✕</button>
+                                <h2 className="text-xl font-bold mb-6 text-gray-800">{editingPromotion.id ? 'প্রমোশন এডিট' : 'নতুন প্রমোশন'}</h2>
                                 <form
                                     onSubmit={async (e) => {
                                         e.preventDefault();
-                                        setGiftSaving(true);
-                                        let imageUrl = editingGift.image_url;
-                                        if (giftImageFile) {
-                                            const tempId = editingGift.id || crypto.randomUUID();
-                                            imageUrl = await uploadGiftImage(giftImageFile, tempId) || undefined;
-                                        }
-                                        const payload = { ...editingGift, image_url: imageUrl } as GiftItem;
-                                        if (editingGift.id) {
-                                            await updateGiftItem(editingGift.id, payload);
+                                        setPromoSaving(true);
+                                        const payload = editingPromotion as Omit<Promotion, 'id' | 'created_at'>;
+                                        if ((editingPromotion as Promotion).id) {
+                                            await updatePromotion((editingPromotion as Promotion).id, payload);
                                         } else {
-                                            await addGiftItem({
-                                                name: payload.name || '',
-                                                emoji: payload.emoji || '🎁',
-                                                image_url: payload.image_url,
-                                                is_visible: payload.is_visible ?? true,
-                                                show_in_popup: payload.show_in_popup ?? false,
-                                                sort_order: payload.sort_order || 0,
-                                            });
+                                            await createPromotion(payload);
                                         }
-                                        setEditingGift(null);
-                                        setGiftImageFile(null);
-                                        setGiftImagePreview(null);
-                                        setGiftSaving(false);
-                                        loadGifts();
+                                        setEditingPromotion(null);
+                                        setPromoSaving(false);
+                                        loadPromotions();
                                     }}
                                     className="space-y-4"
                                 >
-                                    {/* Image Upload */}
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">গিফটের ছবি (ঐচ্ছিক)</label>
-                                        <div className="flex items-center gap-4">
-                                            <div
-                                                className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-indigo-400 transition-colors bg-gray-50"
-                                                onClick={() => giftFileInputRef.current?.click()}
-                                            >
-                                                {giftImagePreview || editingGift.image_url ? (
-                                                    <img src={giftImagePreview || editingGift.image_url} alt="preview" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <span className="text-3xl">{editingGift.emoji || '🎁'}</span>
-                                                )}
-                                            </div>
-                                            <div className="flex-1">
-                                                <button type="button" onClick={() => giftFileInputRef.current?.click()} className="w-full py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
-                                                    📁 ছবি আপলোড করুন
-                                                </button>
-                                                {(giftImagePreview || editingGift.image_url) && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { setGiftImageFile(null); setGiftImagePreview(null); setEditingGift(prev => prev ? { ...prev, image_url: undefined } : null); }}
-                                                        className="w-full mt-1 py-1 text-xs text-red-500 hover:text-red-700"
-                                                    >
-                                                        🗑️ ছবি সরান
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <input ref={giftFileInputRef} type="file" accept="image/*" className="hidden"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) { setGiftImageFile(file); setGiftImagePreview(URL.createObjectURL(file)); }
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">গিফটের নাম *</label>
-                                            <input type="text" required value={editingGift.name || ''} onChange={e => setEditingGift(prev => ({ ...prev!, name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" placeholder="স্মার্টফোন" />
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">টাইটেল *</label>
+                                            <input required type="text" value={editingPromotion.title || ''} onChange={e => setEditingPromotion(p => ({ ...p!, title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-300" placeholder="নতুন ব্যাচ শুরু!" />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-1">ইমোজি</label>
-                                            <input type="text" value={editingGift.emoji || '🎁'} onChange={e => setEditingGift(prev => ({ ...prev!, emoji: e.target.value }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" placeholder="🎁" />
+                                            <input type="text" value={editingPromotion.emoji || '📢'} onChange={e => setEditingPromotion(p => ({ ...p!, emoji: e.target.value }))} className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-300" placeholder="📢" />
                                         </div>
                                     </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">সাব-টাইটেল (তারিখ/মাস)</label>
+                                        <input type="text" value={editingPromotion.subtitle || ''} onChange={e => setEditingPromotion(p => ({ ...p!, subtitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-300" placeholder="মার্চ ২০২৬" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">বিস্তারিত বিবরণ</label>
+                                        <textarea rows={4} value={editingPromotion.content || ''} onChange={e => setEditingPromotion(p => ({ ...p!, content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-300" placeholder="প্রমোশনের বিস্তারিত লিখুন..." />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">প্রকার</label>
+                                            <select value={editingPromotion.type || 'notice'} onChange={e => setEditingPromotion(p => ({ ...p!, type: e.target.value as Promotion['type'] }))} className="w-full px-3 py-2 border rounded-lg outline-none bg-white">
+                                                <option value="notice">📢 নোটিশ</option>
+                                                <option value="achievement">🏆 অর্জন</option>
+                                                <option value="event">🎉 ইভেন্ট</option>
+                                            </select>
+                                        </div>
                                         <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-1">সর্ট অর্ডার</label>
-                                            <input type="number" value={editingGift.sort_order || 0} onChange={e => setEditingGift(prev => ({ ...prev!, sort_order: Number(e.target.value) }))} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300 outline-none" />
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-6">
-                                            <input type="checkbox" id="gift-visible" checked={editingGift.is_visible ?? true} onChange={e => setEditingGift(prev => ({ ...prev!, is_visible: e.target.checked }))} className="h-5 w-5" />
-                                            <label htmlFor="gift-visible" className="text-sm font-bold text-gray-700">স্ক্রিনে দেখাবে</label>
+                                            <input type="number" value={editingPromotion.sort_order ?? 0} onChange={e => setEditingPromotion(p => ({ ...p!, sort_order: Number(e.target.value) }))} className="w-full px-3 py-2 border rounded-lg outline-none" />
                                         </div>
                                     </div>
-
-                                    <div className="flex items-center gap-2 py-2 px-3 bg-blue-50 rounded-lg border border-blue-100">
-                                        <input type="checkbox" id="gift-popup" checked={editingGift.show_in_popup ?? false} onChange={e => setEditingGift(prev => ({ ...prev!, show_in_popup: e.target.checked }))} className="h-5 w-5 text-blue-600" />
-                                        <label htmlFor="gift-popup" className="text-sm font-bold text-blue-700 font-bengali">পপ-আপ এ দেখাবে (Pop-up Display)</label>
+                                    <div className="flex items-center gap-2">
+                                        <input type="checkbox" id="promo-active" checked={editingPromotion.is_active ?? true} onChange={e => setEditingPromotion(p => ({ ...p!, is_active: e.target.checked }))} className="h-5 w-5" />
+                                        <label htmlFor="promo-active" className="text-sm font-bold text-gray-700">স্ক্রিনে দেখাবে (Active)</label>
                                     </div>
-
-                                    <button type="submit" disabled={giftSaving} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition disabled:opacity-50 mt-4">
-                                        {giftSaving ? 'সংরক্ষণ করছে...' : (editingGift.id ? 'আপডেট করুন' : 'যোগ করুন')}
+                                    <button type="submit" disabled={promoSaving} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition disabled:opacity-50">
+                                        {promoSaving ? 'সংরক্ষণ হচ্ছে...' : ((editingPromotion as Promotion).id ? 'আপডেট করুন' : 'যোগ করুন')}
                                     </button>
                                 </form>
                             </div>
                         </div>
                     )}
 
-                    {/* Gift Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {gifts.map((gift) => (
-                            <div key={gift.id} className={`bg-white rounded-xl shadow border-2 overflow-hidden transition-all ${gift.is_visible ? 'border-green-200' : 'border-gray-200 opacity-60'}`}>
-                                <div className="h-32 flex items-center justify-center bg-gray-50">
-                                    {gift.image_url ? (
-                                        <img src={gift.image_url} alt={gift.name} className="h-full w-full object-contain p-2" />
-                                    ) : (
-                                        <span className="text-5xl">{gift.emoji}</span>
-                                    )}
-                                    {gift.show_in_popup && (
-                                        <div className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm animate-pulse z-10">
-                                            POPUP
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="p-3">
-                                    <p className="font-bold text-sm text-gray-800 text-center truncate font-bengali">{gift.name}</p>
-                                    <p className="text-xs text-center text-gray-400 mt-1">#{gift.sort_order}</p>
-                                    <div className="flex flex-col gap-2 mt-3">
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={async () => { await updateGiftItem(gift.id, { is_visible: !gift.is_visible }); loadGifts(); }}
-                                                className={`flex-1 py-1 rounded text-xs font-bold transition ${gift.is_visible ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                                            >
-                                                {gift.is_visible ? '👁 দেখা যায়' : '🚫 লুকানো'}
-                                            </button>
-                                            <button
-                                                onClick={() => { setEditingGift(gift); setGiftImagePreview(null); setGiftImageFile(null); }}
-                                                className="px-2 py-1 rounded text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold"
-                                            >✏️</button>
-                                            <button
-                                                onClick={async () => {
-                                                    if (window.confirm(`"${gift.name}" মুছে ফেলবেন?`)) {
-                                                        if (gift.image_url) await deleteGiftImage(gift.image_url);
-                                                        await deleteGiftItem(gift.id);
-                                                        loadGifts();
-                                                    }
-                                                }}
-                                                className="px-2 py-1 rounded text-xs bg-red-50 text-red-500 hover:bg-red-100 font-bold"
-                                            >🗑️</button>
-                                        </div>
-                                        <button
-                                            onClick={async () => { await updateGiftItem(gift.id, { show_in_popup: !gift.show_in_popup }); loadGifts(); }}
-                                            className={`w-full py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${gift.show_in_popup ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100'}`}
-                                        >
-                                            {gift.show_in_popup ? '⚡ পপ-আপ চালু' : '💨 পপ-আপ অফ'}
-                                        </button>
+                    {/* Promotions Grid */}
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {promotions.map(promo => (
+                            <div key={promo.id} className={`bg-white rounded-xl shadow border-2 overflow-hidden transition-all ${promo.is_active ? 'border-green-200' : 'border-gray-200 opacity-70'}`}>
+                                <div className={`px-5 py-3 flex items-center gap-3 ${promo.type === 'achievement' ? 'bg-yellow-50' : promo.type === 'event' ? 'bg-purple-50' : 'bg-blue-50'}`}>
+                                    <span className="text-3xl">{promo.emoji}</span>
+                                    <div>
+                                        <div className="font-bold text-gray-800 font-bengali">{promo.title}</div>
+                                        {promo.subtitle && <div className="text-xs text-gray-500 font-bengali">{promo.subtitle}</div>}
                                     </div>
+                                    {promo.is_active && <span className="ml-auto text-xs bg-green-500 text-white px-2 py-0.5 rounded font-bold">ACTIVE</span>}
+                                </div>
+                                {promo.content && <p className="px-5 py-3 text-sm text-gray-600 font-bengali line-clamp-2">{promo.content}</p>}
+                                <div className="px-5 pb-4 flex gap-2">
+                                    <button onClick={async () => { await updatePromotion(promo.id, { is_active: !promo.is_active }); loadPromotions(); }} className={`flex-1 py-1.5 rounded-lg text-xs font-bold ${promo.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                        {promo.is_active ? '👁 দেখা যায়' : '🚫 লুকানো'}
+                                    </button>
+                                    <button onClick={() => setEditingPromotion(promo)} className="px-3 py-1.5 rounded-lg text-xs bg-indigo-50 text-indigo-600 font-bold">✏️ এডিট</button>
+                                    <button onClick={async () => { if (window.confirm('এই প্রমোশন মুছবেন?')) { await deletePromotion(promo.id); loadPromotions(); } }} className="px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-500 font-bold">🗑️</button>
                                 </div>
                             </div>
                         ))}
-                        {gifts.length === 0 && (
-                            <div className="col-span-full text-center py-12 text-gray-400">
-                                কোনো গিফট আইটেম নেই। উপরের বাটনে ক্লিক করে যোগ করুন।
-                            </div>
+                        {promotions.length === 0 && (
+                            <div className="col-span-full text-center py-12 text-gray-400 font-bengali">কোনো প্রমোশন নেই। উপরের বাটনে ক্লিক করে যোগ করুন।</div>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* ======================== BACKGROUND TAB ======================== */}
-            {activeTab === 'background' && (
+            {/* ======================== RESULTS TAB ======================== */}
+            {activeTab === 'results' && (
                 <div>
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Background Management</h2>
-                    </div>
-
-                    {/* Upload Section */}
-                    <div className="bg-white rounded-xl shadow-md p-6 mb-10 border border-gray-100">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Upload New Background</h3>
-                        <form onSubmit={handleBgUpload} className="flex flex-col md:flex-row gap-4 items-end">
-                            <div className="flex-grow w-full">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Image</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    ref={bgFileInputRef}
-                                    onChange={(e) => setBgImageFile(e.target.files?.[0] || null)}
-                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-blue/10 file:text-brand-blue hover:file:bg-brand-blue/20"
-                                    required
-                                />
-                            </div>
+                        <h2 className="text-2xl font-bold text-gray-800">রেজাল্ট ঘোষণা</h2>
+                        <div className="flex gap-3">
+                            <a href="/results" target="_blank" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm">🖥️ স্ক্রিন দেখুন</a>
                             <button
-                                type="submit"
-                                disabled={bgSaving || !bgImageFile}
-                                className="px-8 py-3 bg-brand-blue text-white rounded-xl font-bold hover:bg-brand-red transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {bgSaving ? 'Uploading...' : 'Upload & Save'}
-                            </button>
-                        </form>
+                                onClick={() => setEditingAnnouncement({ title: '', headline: '', score_breakdown: [], is_active: true, sort_order: announcements.length + 1 })}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                            >+ নতুন রেজাল্ট যোগ করুন</button>
+                        </div>
                     </div>
 
-                    {/* Background Grid */}
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {/* Default Option (No Custom Background) */}
-                        <div className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${backgrounds.every(b => !b.is_active) ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100'}`}>
-                            <div className="h-40 bg-gray-100 flex items-center justify-center">
-                                <span className="text-gray-400 font-medium">Theme Default</span>
-                            </div>
-                            <div className="p-4">
-                                <h4 className="font-bold text-gray-800 mb-3">No Background</h4>
-                                {backgrounds.some(b => b.is_active) ? (
-                                    <button
-                                        onClick={() => handleActivateBackground(null)}
-                                        className="w-full py-2 text-sm font-bold text-brand-blue bg-brand-blue/5 hover:bg-brand-blue/10 rounded-lg"
-                                    >
-                                        Use Default
-                                    </button>
-                                ) : (
-                                    <div className="w-full py-2 text-sm font-bold text-green-600 bg-green-50 text-center rounded-lg">
-                                        ACTIVE
+                    {/* Result Announcement Form Modal */}
+                    {editingAnnouncement !== null && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl p-8 w-full max-w-xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
+                                <button onClick={() => setEditingAnnouncement(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">✕</button>
+                                <h2 className="text-xl font-bold mb-6 text-gray-800">{(editingAnnouncement as ResultAnnouncement).id ? 'রেজাল্ট এডিট' : 'নতুন রেজাল্ট ঘোষণা'}</h2>
+                                <form
+                                    onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        setAnnSaving(true);
+                                        const payload = editingAnnouncement as Omit<ResultAnnouncement, 'id' | 'created_at'>;
+                                        if ((editingAnnouncement as ResultAnnouncement).id) {
+                                            await updateAnnouncement((editingAnnouncement as ResultAnnouncement).id, payload);
+                                        } else {
+                                            await createAnnouncement(payload);
+                                        }
+                                        setEditingAnnouncement(null);
+                                        setAnnSaving(false);
+                                        loadAnnouncements();
+                                    }}
+                                    className="space-y-4"
+                                >
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">মাস / পিরিয়ড *</label>
+                                        <input required type="text" value={editingAnnouncement.title || ''} onChange={e => setEditingAnnouncement(p => ({ ...p!, title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-300" placeholder="ফেব্রুয়ারি ২০২৬" />
                                     </div>
-                                )}
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">হেডলাইন *</label>
+                                        <input required type="text" value={editingAnnouncement.headline || ''} onChange={e => setEditingAnnouncement(p => ({ ...p!, headline: e.target.value }))} className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-300" placeholder="১০০ জন শিক্ষার্থী ৬+ স্কোর অর্জন করেছেন" />
+                                    </div>
+
+                                    {/* Dynamic Score Breakdown Builder */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="text-sm font-bold text-gray-700">স্কোর বিভাজন</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingAnnouncement(p => ({ ...p!, score_breakdown: [...(p!.score_breakdown || []), { score: '', count: '' }] }))}
+                                                className="text-xs px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                                            >+ সারি যোগ করুন</button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {(editingAnnouncement.score_breakdown || []).map((row, idx) => (
+                                                <div key={idx} className="flex gap-2 items-center bg-gray-50 p-2 rounded-lg">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="স্কোর (যেমন: ৬)"
+                                                        value={row.score}
+                                                        onChange={e => {
+                                                            const updated = [...(editingAnnouncement.score_breakdown || [])];
+                                                            updated[idx] = { ...updated[idx], score: e.target.value };
+                                                            setEditingAnnouncement(p => ({ ...p!, score_breakdown: updated }));
+                                                        }}
+                                                        className="flex-1 px-3 py-2 border rounded-lg outline-none text-sm focus:ring-2 focus:ring-indigo-200 bg-white"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="সংখ্যা (যেমন: ৫০ জন)"
+                                                        value={row.count}
+                                                        onChange={e => {
+                                                            const updated = [...(editingAnnouncement.score_breakdown || [])];
+                                                            updated[idx] = { ...updated[idx], count: e.target.value };
+                                                            setEditingAnnouncement(p => ({ ...p!, score_breakdown: updated }));
+                                                        }}
+                                                        className="flex-1 px-3 py-2 border rounded-lg outline-none text-sm focus:ring-2 focus:ring-indigo-200 bg-white"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const updated = (editingAnnouncement.score_breakdown || []).filter((_, i) => i !== idx);
+                                                            setEditingAnnouncement(p => ({ ...p!, score_breakdown: updated }));
+                                                        }}
+                                                        className="px-2 py-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                                                    >✕</button>
+                                                </div>
+                                            ))}
+                                            {(editingAnnouncement.score_breakdown || []).length === 0 && (
+                                                <p className="text-xs text-gray-400 italic text-center py-2 font-bengali">"+ সারি যোগ করুন" বাটনে ক্লিক করে স্কোর - সংখ্যা যোগ করুন</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">সর্ট অর্ডার</label>
+                                            <input type="number" value={editingAnnouncement.sort_order ?? 0} onChange={e => setEditingAnnouncement(p => ({ ...p!, sort_order: Number(e.target.value) }))} className="w-full px-3 py-2 border rounded-lg outline-none" />
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-6">
+                                            <input type="checkbox" id="ann-active" checked={editingAnnouncement.is_active ?? true} onChange={e => setEditingAnnouncement(p => ({ ...p!, is_active: e.target.checked }))} className="h-5 w-5" />
+                                            <label htmlFor="ann-active" className="text-sm font-bold text-gray-700 font-bengali">স্ক্রিনে দেখাবে</label>
+                                        </div>
+                                    </div>
+                                    <button type="submit" disabled={annSaving} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition disabled:opacity-50">
+                                        {annSaving ? 'সংরক্ষণ হচ্ছে...' : ((editingAnnouncement as ResultAnnouncement).id ? 'আপডেট করুন' : 'যোগ করুন')}
+                                    </button>
+                                </form>
                             </div>
                         </div>
+                    )}
 
-                        {/* Custom Backgrounds */}
-                        {backgrounds.map((bg) => (
-                            <div key={bg.id} className={`bg-white rounded-xl shadow-md overflow-hidden border-2 transition-all ${bg.is_active ? 'border-green-500 ring-2 ring-green-100' : 'border-gray-100 hover:border-gray-300'}`}>
-                                <div className="h-40 relative group">
-                                    <img src={bg.image_url} alt={bg.name} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <button
-                                            onClick={() => handleBgDelete(bg)}
-                                            className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
-                                            title="Delete"
-                                        >
-                                            🗑️
-                                        </button>
+                    {/* Announcements List */}
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {announcements.map(ann => (
+                            <div key={ann.id} className={`bg-white rounded-xl shadow border-2 overflow-hidden ${ann.is_active ? 'border-green-200' : 'border-gray-200 opacity-70'}`}>
+                                <div className="bg-slate-800 text-white px-5 py-4">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs text-yellow-400 font-bold font-bengali">📅 {ann.title}</span>
+                                        {ann.is_active && <span className="text-xs bg-green-500 px-2 py-0.5 rounded font-bold">ACTIVE</span>}
                                     </div>
-                                    {bg.is_active && (
-                                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">ACTIVE</div>
-                                    )}
+                                    <div className="font-bold text-lg leading-snug font-bengali">{ann.headline}</div>
                                 </div>
-                                <div className="p-4">
-                                    <h4 className="font-bold text-gray-800 mb-3 line-clamp-1" title={bg.name}>{bg.name}</h4>
-                                    {!bg.is_active && (
-                                        <button
-                                            onClick={() => handleActivateBackground(bg.id)}
-                                            className="w-full py-2 text-sm font-bold text-brand-blue bg-brand-blue/5 hover:bg-brand-blue/10 rounded-lg"
-                                        >
-                                            Activate
-                                        </button>
-                                    )}
+                                {ann.score_breakdown && ann.score_breakdown.length > 0 && (
+                                    <div className="px-5 py-3 flex flex-wrap gap-2">
+                                        {ann.score_breakdown.map((row, i) => (
+                                            <span key={i} className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-800 text-sm font-bold px-3 py-1 rounded-full font-bengali">
+                                                <span className="text-blue-600">{row.score}</span>
+                                                <span className="text-blue-300">→</span>
+                                                {row.count}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="px-5 pb-4 flex gap-2">
+                                    <button onClick={async () => { await updateAnnouncement(ann.id, { is_active: !ann.is_active }); loadAnnouncements(); }} className={`flex-1 py-1.5 rounded-lg text-xs font-bold ${ann.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                        {ann.is_active ? '👁 দেখা যায়' : '🚫 লুকানো'}
+                                    </button>
+                                    <button onClick={() => setEditingAnnouncement(ann)} className="px-3 py-1.5 rounded-lg text-xs bg-indigo-50 text-indigo-600 font-bold">✏️ এডিট</button>
+                                    <button onClick={async () => { if (window.confirm('এই রেজাল্ট ঘোষণা মুছবেন?')) { await deleteAnnouncement(ann.id); loadAnnouncements(); } }} className="px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-500 font-bold">🗑️</button>
                                 </div>
                             </div>
                         ))}
+                        {announcements.length === 0 && (
+                            <div className="col-span-full text-center py-12 text-gray-400 font-bengali">কোনো রেজাল্ট ঘোষণা নেই। উপরের বাটনে ক্লিক করে যোগ করুন।</div>
+                        )}
                     </div>
                 </div>
             )}

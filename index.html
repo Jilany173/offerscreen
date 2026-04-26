@@ -24,7 +24,7 @@
                     },
                     fontFamily: {
                         serif: ['"Playfair Display"', 'serif'],
-                        bengali: ['"Li Shadhinata"', '"Hind Siliguri"', 'sans-serif'],
+                        bengali: ['"Li Shadhinata"', '"Li Sabbir"', '"Hind Siliguri"', 'sans-serif'],
                         counter: ['"Oswald"', 'sans-serif'],
                         poppins: ['"Poppins"', 'sans-serif'],
                     },
@@ -36,6 +36,7 @@
                         'glow': 'pulse-glow 4s ease-in-out infinite',
                         'logo-glow': 'logoGlow 3s ease-in-out infinite',
                         'flip-in': 'flipIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                        'ken-burns': 'kenBurns 20s ease-in-out alternate infinite',
                     },
                     keyframes: {
                         fadeIn: {
@@ -61,8 +62,12 @@
                         flipIn: {
                             '0%': { transform: 'perspective(1000px) rotateY(90deg)', opacity: '0' },
                             '100%': { transform: 'perspective(1000px) rotateY(0deg)', opacity: '1' },
+                        },
+                        kenBurns: {
+                            '0%': { transform: 'scale(1)' },
+                            '100%': { transform: 'scale(1.1)' },
                         }
-                    }
+                    },
                 }
             }
         }
@@ -71,6 +76,13 @@
         @font-face {
             font-family: 'Li Shadhinata';
             src: url('/fonts/Li Shadhinata2 2.0 Unicode.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Li Sabbir';
+            src: url('/fonts/Li Sabbir Sorolota Unicode.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
         }

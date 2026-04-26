@@ -6,17 +6,21 @@ import GiftMarquee from '../../components/GiftMarquee';
 import GiftPopups from '../../components/GiftPopups';
 import Footer from '../../components/Footer';
 import UpcomingOfferScreen from '../../components/UpcomingOfferScreen';
+import MultiZoneLayout from '../../components/MultiZoneLayout';
+import Ticker from '../../components/Ticker';
 
 import { fetchActiveOffer, fetchUpcomingOffer } from '../../services/offerService';
 import { fetchActiveTheme, ThemeSettings } from '../../services/themeService';
 import { fetchActiveBackground, BackgroundImage } from '../../services/backgroundService';
+import { fetchSignageSettings } from '../../services/mediaService';
 import { Offer, Course } from '../../types';
 
-const OfferScreen: React.FC = () => {
+const SignageScreen: React.FC = () => {
     const [offer, setOffer] = useState<Offer | null>(null);
     const [upcomingOffer, setUpcomingOffer] = useState<Offer | null>(null);
     const [courses, setCourses] = useState<Course[]>([]);
     const [themeSettings, setThemeSettings] = useState<ThemeSettings | null>(null);
+    const [signageSettings, setSignageSettings] = useState<Record<string, string>>({});
     const [currentCourseIndex, setCurrentCourseIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [activeBackground, setActiveBackground] = useState<BackgroundImage | null>(null);
@@ -88,7 +92,12 @@ const OfferScreen: React.FC = () => {
             setActiveBackground(bg);
         };
 
-        Promise.all([loadOffer(), loadTheme(), loadBackground()]).then(() => {
+        const loadSignageSettings = async () => {
+            const settings = await fetchSignageSettings();
+            setSignageSettings(settings);
+        };
+
+        Promise.all([loadOffer(), loadTheme(), loadBackground(), loadSignageSettings()]).then(() => {
             setLoading(false);
         });
     }, []);
@@ -167,20 +176,9 @@ const OfferScreen: React.FC = () => {
         );
     }
 
-    // Offer Ended Screen (Clean View)
-    if (isEnded) {
-        return (
-            <div className="w-full min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
-                {/* Dark overlay for readability */}
-                <div className="absolute inset-0 bg-black/60 z-0"></div>
-                <div className="relative z-10 flex flex-col items-center text-center px-4 animate-fade-in scale-110 md:scale-150">
-                    <div className="headline-font text-6xl md:text-9xl text-brand-red font-black drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] select-none tracking-tighter">
-                        OFFER <span className="text-gray-900">ENDED</span>
-                    </div>
-                    <div className="mt-4 w-32 md:w-64 h-2 bg-brand-red rounded-full opacity-50 animate-pulse"></div>
-                </div>
-            </div>
-        );
+    // Offer Ended Screen / Digital Signage Screen Play
+    if (isEnded || (!offer && !upcomingOffer)) {
+        return <MultiZoneLayout />;
     }
 
     return (
@@ -295,9 +293,16 @@ const OfferScreen: React.FC = () => {
                     </main>
 
                     {/* Footer Added Here */}
-                    <div className={themeSettings?.show_gift_marquee === false ? 'pb-12' : 'pb-0'}>
+                    <div className={`${themeSettings?.show_gift_marquee === false ? 'pb-24' : 'pb-16'}`}>
                         <Footer />
                     </div>
+
+                    {/* Ticker Placement at Floating Footer */}
+                    {signageSettings.show_ticker !== 'false' && (
+                        <div className="fixed bottom-8 left-8 right-8 z-[9999]">
+                            <Ticker speed={Number(signageSettings.ticker_speed) || 60} />
+                        </div>
+                    )}
 
                     {/* Gift Display Components */}
                     {themeSettings?.show_gift_marquee !== false && <GiftMarquee />}
@@ -308,4 +313,4 @@ const OfferScreen: React.FC = () => {
     );
 };
 
-export default OfferScreen;
+export default SignageScreen;
