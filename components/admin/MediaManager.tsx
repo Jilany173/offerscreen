@@ -208,50 +208,50 @@ const MediaManager: React.FC = () => {
             )}
 
             {/* Sub-Tab Navigation */}
-            <div className="flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl w-max border border-gray-200">
+            <div className="flex items-center gap-1 p-1 bg-gray-100/50 rounded-2xl w-full md:w-max border border-gray-200 overflow-x-auto hide-scrollbar">
                 <button 
                     onClick={() => setActiveTab('dashboard')}
-                    className={`px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'dashboard' ? 'bg-white text-brand-blue shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'dashboard' ? 'bg-white text-brand-blue shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                    🚀 Signage Dashboard
+                    🚀 <span className="hidden sm:inline">Signage</span> Dashboard
                 </button>
                 <button 
                     onClick={() => setActiveTab('media')}
-                    className={`px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'media' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'media' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                    📺 Media Playlist
+                    📺 <span className="hidden sm:inline">Media</span> Playlist
                 </button>
             </div>
 
             {activeTab === 'dashboard' ? (
                 <div className="animate-fade-in">
                     {/* ======================== SIGNAGE CONFIGURATION ======================== */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border border-blue-100 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
+                    <div className="bg-white p-5 md:p-8 rounded-3xl shadow-xl border border-blue-100 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none hidden md:block">
                             <span className="text-9xl">⚙️</span>
                         </div>
                         
-                        <h2 className="text-3xl font-black text-gray-900 flex items-center gap-3 mb-2">
-                            🛠️ Signage Dashboard Settings
+                        <h2 className="text-2xl md:text-3xl font-black text-gray-900 flex items-center gap-3 mb-2">
+                            🛠️ <span className="hidden sm:inline">Signage</span> Settings
                         </h2>
-                        <p className="text-gray-500 mb-8 font-medium">Control widgets, Ticker, and overlays in Real-time.</p>
+                        <p className="text-gray-500 mb-6 md:mb-8 font-medium text-sm">Control widgets, Ticker, and overlays in Real-time.</p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
                             
                             {/* Ticker Config (playlist) */}
-                            <div className="space-y-4 lg:col-span-2 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                            <div className="space-y-4 xl:col-span-2 bg-gray-50 p-4 md:p-6 rounded-2xl border border-gray-100">
                                 <label className="text-sm font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
                                      📣 Ticker Message Playlist
                                 </label>
                                 
-                                <form onSubmit={handleAddTicker} className="flex gap-2 mb-4">
+                                <form onSubmit={handleAddTicker} className="flex flex-col sm:flex-row gap-2 mb-4">
                                     <input 
-                                        className="flex-1 p-3 border-2 border-gray-200 rounded-xl focus:border-brand-blue outline-none font-medium"
+                                        className="flex-1 p-3 border-2 border-gray-200 rounded-xl focus:border-brand-blue outline-none font-medium text-sm"
                                         placeholder="Add new ticker message..."
                                         value={newTickerInput}
                                         onChange={(e) => setNewTickerInput(e.target.value)}
                                     />
-                                    <button type="submit" className="bg-brand-blue text-white px-6 py-3 rounded-xl font-bold">Add</button>
+                                    <button type="submit" className="bg-brand-blue text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-100">Add Msg</button>
                                 </form>
 
                                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
@@ -449,13 +449,13 @@ const MediaManager: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="grid gap-4 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+                        <div className="grid gap-4 max-h-[700px] overflow-y-auto pr-2 md:pr-4 custom-scrollbar">
                             {mediaItems.map((item, index) => (
-                                <div key={item.id} className="flex flex-col md:flex-row items-center gap-6 p-4 border-2 border-gray-50 rounded-2xl bg-white hover:border-blue-100 hover:shadow-lg transition-all">
-                                    <div className="font-black text-gray-300 w-8 text-center text-xl">
+                                <div key={item.id} className="flex flex-col md:flex-row items-center gap-4 md:gap-6 p-4 border-2 border-gray-50 rounded-2xl bg-white hover:border-blue-100 hover:shadow-lg transition-all relative">
+                                    <div className="absolute top-4 left-4 md:static font-black text-gray-300 w-8 text-center text-xl">
                                         {index + 1}
                                     </div>
-                                    <div className="w-40 h-24 rounded-xl overflow-hidden bg-black shadow-inner flex-shrink-0 relative group">
+                                    <div className="w-full md:w-40 h-48 md:h-24 rounded-xl overflow-hidden bg-black shadow-inner flex-shrink-0 relative group">
                                         {item.type === 'video' ? (
                                             <video src={item.media_url} className="w-full h-full object-cover" muted />
                                         ) : (
@@ -466,7 +466,7 @@ const MediaManager: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-4 items-center w-full">
+                                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end md:items-center w-full">
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Type</span>
                                             <span className="font-bold text-gray-800 capitalize leading-none">{item.type}</span>
@@ -478,7 +478,7 @@ const MediaManager: React.FC = () => {
                                                 <div className="flex items-center gap-1">
                                                     <input 
                                                         type="number" 
-                                                        className="w-20 p-1 border rounded font-bold focus:border-brand-blue outline-none text-center" 
+                                                        className="w-16 p-1 border rounded font-bold focus:border-brand-blue outline-none text-center text-sm" 
                                                         value={item.duration_seconds} 
                                                         onChange={(e) => handleUpdateDuration(item.id, Number(e.target.value))} 
                                                     />
@@ -488,7 +488,7 @@ const MediaManager: React.FC = () => {
                                         ) : (
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Audio</span>
-                                                <button onClick={() => handleToggleSound(item.id, item.play_with_sound)} className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.play_with_sound ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                                                <button onClick={() => handleToggleSound(item.id, item.play_with_sound)} className={`text-[10px] font-black uppercase px-2 py-1 rounded-full w-max ${item.play_with_sound ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
                                                     {item.play_with_sound ? '🔊 On' : '🔇 Muted'}
                                                 </button>
                                             </div>
@@ -496,13 +496,13 @@ const MediaManager: React.FC = () => {
 
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Display</span>
-                                            <button onClick={() => handleToggleActive(item.id, item.is_active)} className={`text-xs font-bold px-2 py-0.5 rounded-full w-max ${item.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                                            <button onClick={() => handleToggleActive(item.id, item.is_active)} className={`text-[10px] font-black uppercase px-2 py-1 rounded-full w-max ${item.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
                                                 {item.is_active ? 'Active' : 'Paused'}
                                             </button>
                                         </div>
 
-                                        <div className="flex flex-col lg:items-end lg:col-span-2">
-                                            <button onClick={() => setItemToDelete(item)} className="text-red-500 hover:text-red-700 font-bold flex items-center gap-1 bg-red-50 px-3 py-2 rounded-xl transition-all">
+                                        <div className="flex flex-col col-span-2 md:col-span-1 lg:col-span-2 md:items-end">
+                                            <button onClick={() => setItemToDelete(item)} className="w-full md:w-max text-red-500 hover:text-red-700 font-bold flex items-center justify-center gap-1 bg-red-50 px-4 py-2 rounded-xl transition-all text-sm">
                                                 🗑️ Delete
                                             </button>
                                         </div>

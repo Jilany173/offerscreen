@@ -235,37 +235,45 @@ const AdminPanel: React.FC = () => {
     if (loading) return <div className="p-10 text-center">Loading...</div>;
 
     return (
-        <div className="p-10 max-w-6xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+        <div className="p-4 md:p-10 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+                    ⚙️ Admin <span className="text-blue-600">Dashboard</span>
+                </h1>
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-400 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-100">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    SYSTEM ONLINE
+                </div>
+            </div>
 
-            {/* Tabs */}
-            <div className="flex border-b mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
+            {/* Main Tabs Navigation */}
+            <div className="flex gap-1 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 mb-8 overflow-x-auto whitespace-nowrap hide-scrollbar">
                 <button
-                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'playlist' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'playlist' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-500 hover:bg-gray-50'}`}
                     onClick={() => setActiveTab('playlist')}
                 >
-                    📺 Digital Signage Playlist
+                    📺 <span className="hidden sm:inline">Signage</span> Playlist
                 </button>
                 <button
-                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'campaigns' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'campaigns' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-500 hover:bg-gray-50'}`}
                     onClick={() => setActiveTab('campaigns')}
                 >
-                    Campaigns
+                    🚀 Campaigns
                 </button>
                 <button
-                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'theme' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'theme' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-500 hover:bg-gray-50'}`}
                     onClick={() => setActiveTab('theme')}
                 >
-                    Theme & Style Settings
+                    🎨 Theme & Style
                 </button>
                 <button
-                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'promotions' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'promotions' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-500 hover:bg-gray-50'}`}
                     onClick={() => setActiveTab('promotions')}
                 >
                     📢 Promotions
                 </button>
                 <button
-                    className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === 'results' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-500 hover:bg-gray-50'}`}
                     onClick={() => setActiveTab('results')}
                 >
                     📊 Results
