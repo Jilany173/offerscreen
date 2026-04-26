@@ -160,12 +160,6 @@ const MediaManager: React.FC = () => {
         setMediaItems(data);
     };
 
-    const handleToggleActive = async (id: string, currentStatus: boolean) => {
-        await updateMediaItem(id, { is_active: !currentStatus });
-        const data = await fetchAllMedia();
-        setMediaItems(data);
-    };
-
     const confirmDeleteMedia = async () => {
         if (!itemToDelete) return;
         const success = await deleteMediaItem(itemToDelete.id, itemToDelete.media_url);
