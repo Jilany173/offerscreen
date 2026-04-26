@@ -323,21 +323,32 @@ const MediaManager: React.FC = () => {
                                     </button>
                                 </div>
 
-                                <div className="p-3 bg-white rounded-xl shadow-sm border border-blue-100 space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-bold text-gray-700 text-sm">⏳ Ticker Speed</span>
-                                        <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs font-black">{signageSettings.ticker_speed || '60'}s</span>
+                                <div className="p-3 bg-white rounded-xl shadow-sm border border-blue-100 space-y-3">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold text-gray-700 text-xs uppercase tracking-tighter">📢 Ticker Label</span>
+                                        <input 
+                                            type="text"
+                                            className="w-full p-2 border border-gray-200 rounded-lg text-sm font-bold text-brand-red outline-none focus:border-brand-red"
+                                            value={signageSettings.ticker_label || 'আপডেট'}
+                                            onChange={(e) => setSignageSettings(prev => ({ ...prev, ticker_label: e.target.value }))}
+                                            onBlur={() => handleSettingChange('ticker_label', signageSettings.ticker_label || 'আপডেট')}
+                                            placeholder="e.g. আপডেট, অফার"
+                                        />
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                                        <span className="font-bold text-gray-700 text-xs uppercase tracking-tighter">⏳ Scrolling Speed</span>
+                                        <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-[10px] font-black">{signageSettings.ticker_speed || '60'}s</span>
                                     </div>
                                     <input 
                                         type="range" 
                                         min="10" 
-                                        max="120" 
+                                        max="300" 
                                         step="5"
                                         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-blue"
                                         value={signageSettings.ticker_speed || '60'}
                                         onChange={(e) => handleSettingChange('ticker_speed', e.target.value)}
                                     />
-                                    <p className="text-[10px] text-gray-400 font-medium italic">Higher = Slower Scroll</p>
+                                    <p className="text-[9px] text-gray-400 font-medium italic">Higher = Much Slower (Max 300s)</p>
                                 </div>
 
                                 <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-blue-100">

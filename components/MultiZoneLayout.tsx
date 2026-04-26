@@ -108,8 +108,11 @@ const MultiZoneLayout: React.FC = () => {
 
                 {/* Floating Ticker Zone (Left of QR) */}
                 {settings.show_ticker !== 'false' && (
-                    <div className="absolute bottom-8 left-8 right-44 z-[90]">
-                        <Ticker speed={Number(settings.ticker_speed) || 60} />
+                    <div className="absolute bottom-10 left-10 right-52 z-[90]">
+                        <Ticker 
+                            speed={Number(settings.ticker_speed) || 60} 
+                            label={settings.ticker_label || '📢 আপডেট'}
+                        />
                     </div>
                 )}
             </div>

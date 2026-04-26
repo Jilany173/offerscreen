@@ -3,12 +3,14 @@ import { fetchTickerMessages, TickerMessage } from '../services/mediaService';
 
 interface TickerProps {
     speed?: number;
+    label?: string;
     backgroundColor?: string;
     textColor?: string;
 }
 
 const Ticker: React.FC<TickerProps> = ({ 
-    speed = 25, 
+    speed = 60, 
+    label = '📢 আপডেট',
     backgroundColor = 'bg-brand-red', 
     textColor = 'text-white' 
 }) => {
@@ -32,8 +34,8 @@ const Ticker: React.FC<TickerProps> = ({
         <div className={`w-full overflow-hidden whitespace-nowrap h-16 flex items-center bg-blue-900/80 backdrop-blur-3xl border-t-2 border-blue-400/30 shadow-[0_-10px_40px_rgba(0,0,0,0.4)] z-[999]`}>
             {/* Front Label (Fixed) */}
             <div className="bg-brand-red px-6 h-full flex items-center justify-center relative z-20 shadow-[10px_0_20px_rgba(0,0,0,0.3)]">
-                <span className="text-white font-black text-xl tracking-tighter uppercase whitespace-nowrap">
-                    📢 NOTICE
+                <span className="text-white font-black text-xl tracking-tighter uppercase whitespace-nowrap font-bengali">
+                    {label}
                 </span>
                 {/* Triangular Tip */}
                 <div className="absolute top-0 right-[-10px] bottom-0 w-0 h-0 border-t-[32px] border-t-transparent border-b-[32px] border-b-transparent border-l-[10px] border-l-brand-red"></div>
