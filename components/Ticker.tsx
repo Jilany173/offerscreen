@@ -31,7 +31,7 @@ const Ticker: React.FC<TickerProps> = ({
         : "Welcome to Hexa's Jindabazar. Enjoy our Digital Signage Special Offer!";
 
     return (
-        <div className={`w-full overflow-hidden whitespace-nowrap h-16 flex items-center bg-blue-900/80 backdrop-blur-3xl border-t-2 border-blue-400/30 shadow-[0_-10px_40px_rgba(0,0,0,0.4)] z-[999]`}>
+        <div className={`w-full overflow-hidden whitespace-nowrap h-16 flex items-center bg-blue-900/80 backdrop-blur-3xl border-t-2 border-blue-400/30 shadow-[0_-10px_40px_rgba(0,0,0,0.4)]`}>
             {/* Front Label (Fixed) */}
             <div className="bg-brand-red px-6 h-full flex items-center justify-center relative z-20 shadow-[10px_0_20px_rgba(0,0,0,0.3)]">
                 <span className="text-white font-black text-xl tracking-tighter uppercase whitespace-nowrap font-bengali">

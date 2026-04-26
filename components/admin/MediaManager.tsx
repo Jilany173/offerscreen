@@ -121,7 +121,6 @@ const MediaManager: React.FC = () => {
     };
 
     const [groupTitle, setGroupTitle] = useState('');
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
