@@ -43,6 +43,8 @@ export interface MediaItem {
   play_with_sound: boolean;
   is_active: boolean;
   sort_order: number;
+  group_id?: string;
+  group_title?: string;
   created_at?: string;
   updated_at?: string;
 }

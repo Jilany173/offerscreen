@@ -135,6 +135,18 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ onEmpty }) => {
                             className="max-w-full max-h-full object-contain animate-fade-in shadow-2xl"
                         />
                     )}
+
+                    {/* Group Title / Message Overlay */}
+                    {currentMedia.group_title && (
+                        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 animate-slide-up w-full flex justify-center px-10">
+                            <div className="bg-blue-900/40 backdrop-blur-3xl border border-white/20 px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4">
+                                <div className="w-2 h-10 bg-brand-red rounded-full shadow-[0_0_15px_rgba(255,100,100,0.8)]"></div>
+                                <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-lg font-bengali uppercase">
+                                    {currentMedia.group_title}
+                                </h1>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -120,26 +120,43 @@ const MediaManager: React.FC = () => {
         finally { setLoading(false); }
     };
 
+    const [groupTitle, setGroupTitle] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        
         setIsUploading(true);
+        const currentGroupId = files.length > 1 ? crypto.randomUUID() : undefined;
+        const currentGroupTitle = groupTitle.trim();
+        
         try {
-            const uploadedUrl = await uploadMediaFile(file);
-            if (uploadedUrl) {
-                await createMediaItem({
-                    type: file.type.startsWith('video/') ? 'video' : 'image',
-                    media_url: uploadedUrl,
-                    duration_seconds: 10,
-                    play_with_sound: false,
-                    is_active: true,
-                    sort_order: mediaItems.length
-                });
-                const data = await fetchAllMedia();
-                setMediaItems(data);
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const uploadedUrl = await uploadMediaFile(file);
+                if (uploadedUrl) {
+                    await createMediaItem({
+                        type: file.type.startsWith('video/') ? 'video' : 'image',
+                        media_url: uploadedUrl,
+                        duration_seconds: 10,
+                        play_with_sound: false,
+                        is_active: true,
+                        sort_order: mediaItems.length + i,
+                        group_id: currentGroupId,
+                        group_title: currentGroupTitle || undefined
+                    });
+                }
             }
-        } catch (error) { console.error(error); }
-        finally { setIsUploading(false); }
+            setGroupTitle('');
+            const data = await fetchAllMedia();
+            setMediaItems(data);
+        } catch (error) { 
+            console.error(error); 
+        } finally { 
+            setIsUploading(false); 
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     const handleToggleActive = async (id: string, currentStatus: boolean) => {
@@ -438,14 +455,37 @@ const MediaManager: React.FC = () => {
                                     <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Add</button>
                                 </form>
 
-                                <button 
-                                    onClick={() => fileInputRef.current?.click()} 
-                                    disabled={isUploading}
-                                    className="bg-brand-blue text-white px-6 py-3 rounded-xl font-bold shadow-md disabled:opacity-50"
-                                >
-                                    {isUploading ? 'Uploading...' : '📤 Upload New'}
-                                </button>
-                                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="video/*,image/*" />
+                                <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Group Title / Message (Optional)" 
+                                        className="p-3 border-2 border-gray-100 rounded-xl text-sm outline-none focus:border-brand-blue transition-all bg-gray-50/50 font-bold"
+                                        value={groupTitle}
+                                        onChange={(e) => setGroupTitle(e.target.value)}
+                                    />
+                                    <button 
+                                        onClick={() => fileInputRef.current?.click()} 
+                                        disabled={isUploading}
+                                        className="bg-brand-blue text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-100 disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {isUploading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                                Uploading...
+                                            </>
+                                        ) : (
+                                            <>📤 Upload Files (Multiple)</>
+                                        )}
+                                    </button>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    onChange={handleFileChange} 
+                                    className="hidden" 
+                                    accept="video/*,image/*" 
+                                    multiple 
+                                />
                             </div>
                         </div>
 
@@ -470,6 +510,13 @@ const MediaManager: React.FC = () => {
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Type</span>
                                             <span className="font-bold text-gray-800 capitalize leading-none">{item.type}</span>
+                                        </div>
+
+                                        <div className="flex flex-col min-w-[120px]">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Group / Message</span>
+                                            <span className="font-bold text-blue-600 text-xs truncate max-w-[150px] font-bengali" title={item.group_title || 'No Group'}>
+                                                {item.group_title || '—'}
+                                            </span>
                                         </div>
 
                                         {item.type === 'image' ? (
