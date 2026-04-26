@@ -100,7 +100,7 @@ const MultiZoneLayout: React.FC = () => {
                             </div>
                             <div className="flex flex-col items-center leading-none">
                                 <span className="text-[11px] font-black text-gray-500 tracking-tighter uppercase mb-0.5">SCAN FOR</span>
-                                <span className="text-[16px] font-black text-brand-red tracking-wide uppercase">OFFER DETAILS</span>
+                                <span className="text-[16px] font-black text-brand-red tracking-wide uppercase">GOOGLE REVIEW</span>
                             </div>
                         </div>
                     </div>
