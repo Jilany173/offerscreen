@@ -465,7 +465,12 @@ const MediaManager: React.FC = () => {
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Duration</span>
                                                 <div className="flex items-center gap-1">
-                                                    <input type="number" className="w-12 font-bold focus:outline-none" value={item.duration_seconds} onChange={(e) => handleUpdateDuration(item.id, Number(e.target.value))} />
+                                                    <input 
+                                                        type="number" 
+                                                        className="w-20 p-1 border rounded font-bold focus:border-brand-blue outline-none text-center" 
+                                                        value={item.duration_seconds} 
+                                                        onChange={(e) => handleUpdateDuration(item.id, Number(e.target.value))} 
+                                                    />
                                                     <span className="text-xs text-gray-400">sec</span>
                                                 </div>
                                             </div>
