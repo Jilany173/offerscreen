@@ -17,7 +17,7 @@ const DigitalClock: React.FC = () => {
                 {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
             </div>
             <div className="flex flex-col items-center mt-2">
-                <span className="text-brand-red font-bold uppercase tracking-widest text-xs">
+                <span className="text-blue-400 font-black uppercase tracking-[0.2em] text-lg">
                     {days[time.getDay()]}
                 </span>
                 <span className="text-white/60 text-sm font-medium">

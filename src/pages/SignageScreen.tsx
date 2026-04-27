@@ -165,21 +165,9 @@ const SignageScreen: React.FC = () => {
         bgStyle = { backgroundImage: "url('/bg-theme-2.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' };
     }
 
-    // আপকামিং অফার স্ক্রিন
-    if (!offer && upcomingOffer) {
-        return (
-            <UpcomingOfferScreen
-                offer={upcomingOffer}
-                language={themeSettings?.timer_language || 'bn'}
-                bgStyle={bgStyle}
-            />
-        );
-    }
-
-    // Offer Ended Screen / Digital Signage Screen Play
-    if (isEnded || (!offer && !upcomingOffer)) {
-        return <MultiZoneLayout />;
-    }
+    // Always show MultiZoneLayout (Integrated Signage) 
+    // The campaign (Offer) is now interleaved inside the MediaCarousel logic
+    return <MultiZoneLayout />;
 
     return (
         <>

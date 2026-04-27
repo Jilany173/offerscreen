@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { MediaItem } from '../../types';
 import { 
     fetchAllMedia, 
@@ -12,556 +13,286 @@ import {
     createTickerMessage,
     deleteTickerMessage,
     updateTickerMessage,
+    fetchSystemHealth,
     TickerMessage
 } from '../../services/mediaService';
 
 const MediaManager: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'media'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'media' | 'settings' | 'success'>('media');
     const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
     const [tickerMessages, setTickerMessages] = useState<TickerMessage[]>([]);
     const [loading, setLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [systemStatus, setSystemStatus] = useState<'online' | 'offline'>('offline');
     
-    // Signage Configuration State
-    const [signageSettings, setSignageSettings] = useState<Record<string, string>>({
-        show_clock: 'true',
-        show_weather: 'true',
-        show_logo: 'true',
-        weather_city: 'Sylhet',
-        qr_code_url: ''
-    });
+    // UI State for folder view
+    const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+    const [groupList, setGroupList] = useState<string[]>([]);
+    const [currentGroupItems, setCurrentGroupItems] = useState<MediaItem[]>([]);
+    
+    const [schedulingItem, setSchedulingItem] = useState<MediaItem | null>(null);
+    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+    const [pendingFiles, setPendingFiles] = useState<FileList | null>(null);
+    const [selectedGroupId, setSelectedGroupId] = useState('');
+    const [newGroupName, setNewGroupName] = useState('');
 
-    const [urlInput, setUrlInput] = useState('');
-    const [urlType, setUrlType] = useState<'image' | 'video'>('image');
-    const [newTickerInput, setNewTickerInput] = useState('');
-    const [itemToDelete, setItemToDelete] = useState<MediaItem | null>(null);
+    const [templateData, setTemplateData] = useState({ name: '', score: '', type: 'ielts_success', image: null as File | null });
+    const [signageSettings, setSignageSettings] = useState<Record<string, string>>({ show_clock: 'true', show_weather: 'true', show_logo: 'true', weather_city: 'Sylhet', qr_code_url: '', show_qr: 'true', ticker_label: 'LATEST UPDATE', ticker_speed: '20' });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         loadData();
+        const healthCheck = setInterval(async () => {
+            const health = await fetchSystemHealth();
+            if (health) {
+                const lastSeen = new Date(health.last_seen).getTime();
+                setSystemStatus((Date.now() - lastSeen) / 1000 < 65 ? 'online' : 'offline');
+            }
+        }, 10000);
+        return () => clearInterval(healthCheck);
     }, []);
 
     const loadData = async () => {
         setLoading(true);
         try {
-            const [items, settings, msgs] = await Promise.all([
-                fetchAllMedia(),
-                fetchSignageSettings(),
-                fetchTickerMessages()
-            ]);
-
-            setMediaItems(items || []);
+            const [items, settings, msgs] = await Promise.all([fetchAllMedia(), fetchSignageSettings(), fetchTickerMessages()]);
+            const sortedItems = (items || []).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+            setMediaItems(sortedItems);
+            
+            // Build and sort group list based on mediaItems sorting
+            const grouped = sortedItems.reduce((acc, item) => {
+                const g = item.group_id || 'Individual Loop';
+                if (!acc.includes(g)) acc.push(g);
+                return acc;
+            }, [] as string[]);
+            setGroupList(grouped);
+            
             setTickerMessages(msgs || []);
-            if (settings && Object.keys(settings).length > 0) {
-                setSignageSettings(prev => ({ ...prev, ...settings }));
-            }
-        } catch (error) {
-            console.error("Overall load error:", error);
+            if (settings) setSignageSettings(prev => ({ ...prev, ...settings }));
         } finally {
             setLoading(false);
         }
     };
 
-    const handleAddTicker = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newTickerInput.trim()) return;
-        
-        const result = await createTickerMessage(newTickerInput.trim(), tickerMessages.length);
-        if (result) {
-            setNewTickerInput('');
-            const data = await fetchTickerMessages();
-            setTickerMessages(data);
-        } else {
-            alert("⚠️ Failed to add message. Check if SQL table exists.");
+    // Update current group items whenever selection or master list changes
+    useEffect(() => {
+        if (selectedGroup) {
+            const filtered = mediaItems.filter(m => (m.group_id || 'Individual Loop') === selectedGroup);
+            setCurrentGroupItems(filtered);
         }
-    };
+    }, [selectedGroup, mediaItems]);
 
-    const handleDeleteTicker = async (id: string) => {
-        if (!window.confirm("আপনি কি এই মেসেজটি মুছে ফেলতে চান?")) return;
-        await deleteTickerMessage(id);
-        const data = await fetchTickerMessages();
-        setTickerMessages(data);
-    };
-
-    const handleToggleTicker = async (id: string, currentStatus: boolean) => {
-        await updateTickerMessage(id, { is_active: !currentStatus });
-        const data = await fetchTickerMessages();
-        setTickerMessages(data);
-    };
-
-    const handleSettingChange = async (key: string, value: string) => {
-        setSignageSettings(prev => ({ ...prev, [key]: value }));
-        const success = await updateSignageSetting(key, value);
-        if (!success) {
-            alert("⚠️ Failed to update setting in database.");
-            const data = await fetchSignageSettings();
-            setSignageSettings(prev => ({ ...prev, ...data }));
-        }
-    };
-    
-    // ... existing handlers ...
-    const handleAddByUrl = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!urlInput.trim()) return;
-        setLoading(true);
-        try {
-            await createMediaItem({
-                type: urlType,
-                media_url: urlInput.trim(),
-                duration_seconds: 10,
-                play_with_sound: false,
-                is_active: true,
-                sort_order: mediaItems.length
-            });
-            setUrlInput('');
-            const data = await fetchAllMedia();
-            setMediaItems(data);
-        } catch (error) { console.error(error); }
-        finally { setLoading(false); }
-    };
-
-    const [groupTitle, setGroupTitle] = useState('');
-
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-        
-        setIsUploading(true);
-        const currentGroupId = files.length > 1 ? crypto.randomUUID() : undefined;
-        const currentGroupTitle = groupTitle.trim();
-        
-        try {
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const uploadedUrl = await uploadMediaFile(file);
-                if (uploadedUrl) {
-                    await createMediaItem({
-                        type: file.type.startsWith('video/') ? 'video' : 'image',
-                        media_url: uploadedUrl,
-                        duration_seconds: 10,
-                        play_with_sound: false,
-                        is_active: true,
-                        sort_order: mediaItems.length + i,
-                        group_id: currentGroupId,
-                        group_title: currentGroupTitle || undefined
-                    });
-                }
+    // Reorder items within a group
+    const handleItemReorder = async (reordered: MediaItem[]) => {
+        setCurrentGroupItems(reordered);
+        // Find indices in global list to swap
+        const newGlobalList = [...mediaItems];
+        reordered.forEach((item, idx) => {
+            const globalIdx = newGlobalList.findIndex(m => m.id === item.id);
+            if (globalIdx !== -1) {
+                // We'll update the sort_order in database based on new global sequence logic later
+                // For now, let's keep it simple: update item orders directly
             }
-            setGroupTitle('');
-            const data = await fetchAllMedia();
-            setMediaItems(data);
-        } catch (error) { 
-            console.error(error); 
-        } finally { 
-            setIsUploading(false); 
-            if (fileInputRef.current) fileInputRef.current.value = '';
+        });
+        
+        // Batch update DB
+        const updatePromises = reordered.map((item, idx) => updateMediaItem(item.id, { sort_order: idx }));
+        await Promise.all(updatePromises);
+    };
+
+    // Reorder whole groups/folders
+    const handleGroupReorder = async (newGroupOrder: string[]) => {
+        setGroupList(newGroupOrder);
+        
+        // Re-calculate the global sort_order for every single item based on new group sequence
+        const newGlobalItemSequence: MediaItem[] = [];
+        newGroupOrder.forEach(gName => {
+            const itemsInGroup = mediaItems.filter(m => (m.group_id || 'Individual Loop') === gName);
+            newGlobalItemSequence.push(...itemsInGroup);
+        });
+
+        // Batch update database with new global indices
+        const updatePromises = newGlobalItemSequence.map((item, idx) => {
+            if (item.sort_order !== idx) {
+                return updateMediaItem(item.id, { sort_order: idx });
+            }
+            return null;
+        });
+        
+        setMediaItems(newGlobalItemSequence);
+        await Promise.all(updatePromises.filter(p => p !== null));
+    };
+
+    const handleFileSync = async () => {
+        if (!pendingFiles) return;
+        const uploadGroupId = newGroupName.trim() !== '' ? newGroupName : (selectedGroupId || 'General');
+        setIsGroupModalOpen(false);
+        setIsUploading(true);
+        try {
+            const maxOrder = Math.max(...mediaItems.map(m => m.sort_order || 0), 0);
+            for (let i = 0; i < pendingFiles.length; i++) {
+                const url = await uploadMediaFile(pendingFiles[i], p => setUploadProgress(p));
+                if (url) await createMediaItem({ type: pendingFiles[i].type.startsWith('video/') ? 'video' : 'image', media_url: url, is_active: true, duration_seconds: 10, sort_order: maxOrder + i + 1, group_id: uploadGroupId });
+            }
+        } finally {
+            setIsUploading(false);
+            setPendingFiles(null);
+            loadData();
         }
     };
 
-    const handleToggleActive = async (id: string, currentStatus: boolean) => {
-        await updateMediaItem(id, { is_active: !currentStatus });
-        const data = await fetchAllMedia();
-        setMediaItems(data);
+    const saveSchedule = async () => {
+        if (!schedulingItem) return;
+        await updateMediaItem(schedulingItem.id, { ...schedulingItem });
+        setSchedulingItem(null);
+        loadData();
     };
-
-    const handleToggleSound = async (id: string, currentStatus: boolean) => {
-        await updateMediaItem(id, { play_with_sound: !currentStatus });
-        const data = await fetchAllMedia();
-        setMediaItems(data);
-    };
-
-    const handleUpdateDuration = async (id: string, newDuration: number) => {
-        await updateMediaItem(id, { duration_seconds: newDuration });
-        const data = await fetchAllMedia();
-        setMediaItems(data);
-    };
-
-    const confirmDeleteMedia = async () => {
-        if (!itemToDelete) return;
-        const success = await deleteMediaItem(itemToDelete.id, itemToDelete.media_url);
-        if (success) {
-            setItemToDelete(null);
-            const data = await fetchAllMedia();
-            setMediaItems(data);
-        } else {
-            alert("ফাইলটি ডিলিট করা সম্ভব হয়নি।");
-        }
-    };
-
-    if (loading && mediaItems.length === 0) return <div className="p-10 text-center font-bold text-gray-500 animate-pulse">Initializing Dashboard...</div>;
 
     return (
-        <div className="flex flex-col gap-6">
-            {/* Delete Confirmation Modal for Media */}
-            {itemToDelete && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[99999] p-4">
-                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-fade-in">
-                        <div className="text-center">
-                            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                                🗑️
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">আপনি কি নিশ্চিত?</h3>
-                            <p className="text-gray-500 text-sm mb-8">
-                                এই আইটেমটি ডিলিট করলে এটি আপনার সার্ভার এবং ডাটাবেজ থেকে স্থায়ীভাবে মুছে যাবে।
-                            </p>
-                            <div className="flex gap-3">
-                                <button 
-                                    onClick={() => setItemToDelete(null)}
-                                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition"
-                                >
-                                    না, থাক
-                                </button>
-                                <button 
-                                    onClick={confirmDeleteMedia}
-                                    className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition shadow-lg"
-                                >
-                                    হ্যাঁ, ডিলিট
-                                </button>
-                            </div>
-                        </div>
+        <div className="flex flex-col gap-8 bg-gray-50 min-h-screen p-4 md:p-8">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 p-8 rounded-[3rem] shadow-2xl relative border border-white/5">
+                <div className="relative flex items-center gap-6">
+                    <div className="w-16 h-16 bg-blue-600/20 backdrop-blur-2xl rounded-3xl flex items-center justify-center border border-white/10 shadow-inner">
+                        <span className="text-3xl">🎛️</span>
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-black text-white italic tracking-tighter uppercase">Campaign Station</h1>
+                        <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mt-1">Cloud Control v3.5</p>
                     </div>
                 </div>
-            )}
-
-            {/* Sub-Tab Navigation */}
-            <div className="flex items-center gap-1 p-1 bg-gray-100/50 rounded-2xl w-full md:w-max border border-gray-200 overflow-x-auto hide-scrollbar">
-                <button 
-                    onClick={() => setActiveTab('dashboard')}
-                    className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'dashboard' ? 'bg-white text-brand-blue shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    🚀 <span className="hidden sm:inline">Signage</span> Dashboard
-                </button>
-                <button 
-                    onClick={() => setActiveTab('media')}
-                    className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'media' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    📺 <span className="hidden sm:inline">Media</span> Playlist
-                </button>
+                <div className="flex items-center gap-4 mt-6 md:mt-0">
+                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${systemStatus === 'online' ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
+                        <div className={`w-2 h-2 rounded-full ${systemStatus === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                        <span className="text-[9px] font-black tracking-widest uppercase">{systemStatus === 'online' ? 'Ready' : 'Link Lost'}</span>
+                    </div>
+                    <button onClick={() => fileInputRef.current?.click()} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl transition-all">UPLOAD</button>
+                    <input type="file" ref={fileInputRef} onChange={(e) => { if(e.target.files) { setPendingFiles(e.target.files); setIsGroupModalOpen(true); } }} multiple className="hidden" />
+                </div>
             </div>
 
-            {activeTab === 'dashboard' ? (
-                <div className="animate-fade-in">
-                    {/* ======================== SIGNAGE CONFIGURATION ======================== */}
-                    <div className="bg-white p-5 md:p-8 rounded-3xl shadow-xl border border-blue-100 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none hidden md:block">
-                            <span className="text-9xl">⚙️</span>
-                        </div>
-                        
-                        <h2 className="text-2xl md:text-3xl font-black text-gray-900 flex items-center gap-3 mb-2">
-                            🛠️ <span className="hidden sm:inline">Signage</span> Settings
-                        </h2>
-                        <p className="text-gray-500 mb-6 md:mb-8 font-medium text-sm">Control widgets, Ticker, and overlays in Real-time.</p>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
-                            
-                            {/* Ticker Config (playlist) */}
-                            <div className="space-y-4 xl:col-span-2 bg-gray-50 p-4 md:p-6 rounded-2xl border border-gray-100">
-                                <label className="text-sm font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                                     📣 Ticker Message Playlist
-                                </label>
-                                
-                                <form onSubmit={handleAddTicker} className="flex flex-col sm:flex-row gap-2 mb-4">
-                                    <input 
-                                        className="flex-1 p-3 border-2 border-gray-200 rounded-xl focus:border-brand-blue outline-none font-medium text-sm"
-                                        placeholder="Add new ticker message..."
-                                        value={newTickerInput}
-                                        onChange={(e) => setNewTickerInput(e.target.value)}
-                                    />
-                                    <button type="submit" className="bg-brand-blue text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-100">Add Msg</button>
-                                </form>
-
-                                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {tickerMessages.map((msg) => (
-                                        <div key={msg.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm gap-4">
-                                            <span className={`text-sm font-medium flex-1 ${!msg.is_active ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
-                                                {msg.message}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                <button 
-                                                    onClick={() => handleToggleTicker(msg.id, msg.is_active)}
-                                                    className={`text-[10px] font-black uppercase px-2 py-1 rounded ${msg.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
-                                                >
-                                                    {msg.is_active ? 'ON' : 'OFF'}
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDeleteTicker(msg.id)}
-                                                    className="text-red-400 hover:text-red-600 p-1"
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {tickerMessages.length === 0 && <p className="text-gray-400 text-sm italic text-center py-4">No messages in playlist.</p>}
-                                </div>
-                            </div>
-
-                            {/* QR Code Config */}
-                            <div className="space-y-4 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                                <label className="text-sm font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                                     🔗 QR Code URL
-                                </label>
-                                <div className="flex gap-2">
-                                    <input 
-                                        type="url"
-                                        className="flex-1 p-3 border-2 border-gray-200 rounded-xl focus:border-brand-blue outline-none transition-all font-medium text-sm"
-                                        placeholder="https://example.com"
-                                        value={signageSettings.qr_code_url || ''}
-                                        onChange={(e) => setSignageSettings(prev => ({ ...prev, qr_code_url: e.target.value }))}
-                                    />
-                                    <button 
-                                        onClick={() => handleSettingChange('qr_code_url', signageSettings.qr_code_url || '')}
-                                        className="bg-brand-blue text-white px-4 py-2 rounded-xl font-bold text-xs"
-                                    >
-                                        Save
-                                    </button>
-                                </div>
-                                <div className="flex items-center justify-center p-2 bg-white rounded-lg border">
-                                    <img 
-                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(signageSettings.qr_code_url || 'https://hz.jkcshiru.com')}`} 
-                                        alt="QR Preview" 
-                                        className="h-20 w-20"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Toggles & Ticker Speed */}
-                            <div className="flex flex-col gap-4 bg-blue-50/30 p-6 rounded-2xl border border-blue-100">
-                                <h3 className="text-xs font-black text-blue-900 uppercase mb-2 tracking-widest">Master Display Controls</h3>
-                                
-                                <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-blue-100">
-                                    <span className="font-bold text-gray-700 flex items-center gap-2">📢 News Ticker</span>
-                                    <button 
-                                        onClick={() => handleSettingChange('show_ticker', signageSettings.show_ticker === 'true' ? 'false' : 'true')}
-                                        className={`w-14 h-8 rounded-full relative transition-colors ${signageSettings.show_ticker === 'true' ? 'bg-brand-red' : 'bg-gray-300'}`}
-                                    >
-                                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${signageSettings.show_ticker === 'true' ? 'left-7' : 'left-1'}`} />
-                                    </button>
-                                </div>
-
-                                <div className="p-3 bg-white rounded-xl shadow-sm border border-blue-100 space-y-3">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="font-bold text-gray-700 text-xs uppercase tracking-tighter">📢 Ticker Label</span>
-                                        <input 
-                                            type="text"
-                                            className="w-full p-2 border border-gray-200 rounded-lg text-sm font-bold text-brand-red outline-none focus:border-brand-red"
-                                            value={signageSettings.ticker_label || 'আপডেট'}
-                                            onChange={(e) => setSignageSettings(prev => ({ ...prev, ticker_label: e.target.value }))}
-                                            onBlur={() => handleSettingChange('ticker_label', signageSettings.ticker_label || 'আপডেট')}
-                                            placeholder="e.g. আপডেট, অফার"
-                                        />
-                                    </div>
-                                    <div className="flex justify-between items-center pt-2 border-t border-gray-50">
-                                        <span className="font-bold text-gray-700 text-xs uppercase tracking-tighter">⏳ Scrolling Speed</span>
-                                        <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-[10px] font-black">{signageSettings.ticker_speed || '60'}s</span>
-                                    </div>
-                                    <input 
-                                        type="range" 
-                                        min="10" 
-                                        max="300" 
-                                        step="5"
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-blue"
-                                        value={signageSettings.ticker_speed || '60'}
-                                        onChange={(e) => handleSettingChange('ticker_speed', e.target.value)}
-                                    />
-                                    <p className="text-[9px] text-gray-400 font-medium italic">Higher = Much Slower (Max 300s)</p>
-                                </div>
-
-                                <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-blue-100">
-                                    <span className="font-bold text-gray-700 flex items-center gap-2">🖼️ Official Logo</span>
-                                    <button 
-                                        onClick={() => handleSettingChange('show_logo', signageSettings.show_logo === 'true' ? 'false' : 'true')}
-                                        className={`w-14 h-8 rounded-full relative transition-colors ${signageSettings.show_logo === 'true' ? 'bg-green-500' : 'bg-gray-300'}`}
-                                    >
-                                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${signageSettings.show_logo === 'true' ? 'left-7' : 'left-1'}`} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Other Widget Toggles */}
-                            <div className="flex flex-col gap-4 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                                <h3 className="text-xs font-black text-gray-700 uppercase mb-2 tracking-widest">Time & Location</h3>
-                                
-                                <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-gray-100">
-                                    <span className="font-bold text-gray-700 flex items-center gap-2">🕒 Digital Clock</span>
-                                    <button 
-                                        onClick={() => handleSettingChange('show_clock', signageSettings.show_clock === 'true' ? 'false' : 'true')}
-                                        className={`w-14 h-8 rounded-full relative transition-colors ${signageSettings.show_clock === 'true' ? 'bg-green-500' : 'bg-gray-300'}`}
-                                    >
-                                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${signageSettings.show_clock === 'true' ? 'left-7' : 'left-1'}`} />
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-gray-100">
-                                    <span className="font-bold text-gray-700 flex items-center gap-2">⛅ Weather Info</span>
-                                    <button 
-                                        onClick={() => handleSettingChange('show_weather', signageSettings.show_weather === 'true' ? 'false' : 'true')}
-                                        className={`w-14 h-8 rounded-full relative transition-colors ${signageSettings.show_weather === 'true' ? 'bg-green-500' : 'bg-gray-300'}`}
-                                    >
-                                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${signageSettings.show_weather === 'true' ? 'left-7' : 'left-1'}`} />
-                                    </button>
-                                </div>
-
-                                <div className="space-y-4 pt-2">
-                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest leading-none">
-                                         📍 Weather City
-                                    </label>
-                                    <input 
-                                        type="text"
-                                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-brand-blue outline-none transition-all font-bold text-sm"
-                                        value={signageSettings.weather_city || ''}
-                                        onChange={(e) => setSignageSettings(prev => ({ ...prev, weather_city: e.target.value }))}
-                                        onBlur={() => handleSettingChange('weather_city', signageSettings.weather_city || 'Sylhet')}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <div className="animate-fade-in">
-                    {/* ======================== MEDIA PLAYLIST ======================== */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
-                            <div>
-                                <h2 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                                    📺 Playlist Media Manager
-                                </h2>
-                                <p className="text-gray-500 font-medium">Manage looping videos and images.</p>
+            {activeTab === 'media' && (
+                <div className="space-y-6">
+                    {/* Folder Reordering Table */}
+                    {!selectedGroup ? (
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="p-10 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                                <div><h2 className="text-xl font-black text-slate-800 italic">BROADCAST ORDER</h2><p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Swipe to reorder campaigns</p></div>
+                                <span className="bg-slate-900 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-tighter italic">DRAG FOLDERS</span>
                             </div>
                             
-                            <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto items-center">
-                                <div className="text-right hidden sm:block">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Recommended Quality</p>
-                                    <p className="text-xs font-bold text-blue-600">1920x1080 (16:9)</p>
-                                </div>
-                                <form onSubmit={handleAddByUrl} className="flex flex-1 gap-2 p-2 bg-gray-50 rounded-xl border border-gray-200">
-                                    <select 
-                                        value={urlType} 
-                                        onChange={(e) => setUrlType(e.target.value as 'image' | 'video')}
-                                        className="bg-white border rounded-lg px-2 py-1 font-bold text-sm"
-                                    >
-                                        <option value="image">🖼️ Image</option>
-                                        <option value="video">🎬 Video</option>
-                                    </select>
-                                    <input 
-                                        type="url" 
-                                        placeholder="Paste Media URL..." 
-                                        className="flex-1 bg-white border text-sm rounded-lg px-3 py-2 outline-none"
-                                        value={urlInput}
-                                        onChange={(e) => setUrlInput(e.target.value)}
-                                    />
-                                    <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Add</button>
-                                </form>
-
-                                <div className="flex flex-col gap-2 w-full sm:w-auto">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Group Title / Message (Optional)" 
-                                        className="p-3 border-2 border-gray-100 rounded-xl text-sm outline-none focus:border-brand-blue transition-all bg-gray-50/50 font-bold"
-                                        value={groupTitle}
-                                        onChange={(e) => setGroupTitle(e.target.value)}
-                                    />
-                                    <button 
-                                        onClick={() => fileInputRef.current?.click()} 
-                                        disabled={isUploading}
-                                        className="bg-brand-blue text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-100 disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        {isUploading ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                                                Uploading...
-                                            </>
-                                        ) : (
-                                            <>📤 Upload Files (Multiple)</>
-                                        )}
-                                    </button>
-                                </div>
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    onChange={handleFileChange} 
-                                    className="hidden" 
-                                    accept="video/*,image/*" 
-                                    multiple 
-                                />
+                            <div className="overflow-x-auto">
+                                <Reorder.Group axis="y" values={groupList} onReorder={handleGroupReorder} className="w-full">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                <th className="px-10 py-5 w-24">Order</th>
+                                                <th className="px-10 py-5">Campaign Name</th>
+                                                <th className="px-10 py-5">Status</th>
+                                                <th className="px-10 py-5 text-right">Preview</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {groupList.map((gName, idx) => (
+                                                <Reorder.Item key={gName} value={gName} as="tr" className="hover:bg-blue-50/40 transition-colors cursor-grab active:cursor-grabbing group bg-white">
+                                                    <td className="px-10 py-6">
+                                                       <div className="flex items-center gap-3">
+                                                           <span className="text-slate-200 text-2xl">☰</span>
+                                                           <span className="w-8 h-8 flex items-center justify-center bg-slate-900 text-white rounded-lg font-black text-xs italic">{idx + 1}</span>
+                                                       </div>
+                                                    </td>
+                                                    <td className="px-10 py-6" onClick={() => setSelectedGroup(gName)}>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl group-hover:bg-blue-600 group-hover:text-white transition-all">📁</div>
+                                                            <span className="font-black text-slate-800 italic text-lg tracking-tighter uppercase">{gName}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-10 py-6 text-xs font-black text-slate-400 italic">
+                                                        {mediaItems.filter(m => (m.group_id || 'Individual Loop') === gName).length} ITEMS ACTIVE
+                                                    </td>
+                                                    <td className="px-10 py-6 text-right">
+                                                        <button onClick={() => setSelectedGroup(gName)} className="bg-gray-100 text-slate-600 px-6 py-3 rounded-xl font-black text-[10px] tracking-widest hover:bg-slate-900 hover:text-white transition-all">MANAGE →</button>
+                                                    </td>
+                                                </Reorder.Item>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </Reorder.Group>
                             </div>
                         </div>
-
-                        <div className="grid gap-4 max-h-[700px] overflow-y-auto pr-2 md:pr-4 custom-scrollbar">
-                            {mediaItems.map((item, index) => (
-                                <div key={item.id} className="flex flex-col md:flex-row items-center gap-4 md:gap-6 p-4 border-2 border-gray-50 rounded-2xl bg-white hover:border-blue-100 hover:shadow-lg transition-all relative">
-                                    <div className="absolute top-4 left-4 md:static font-black text-gray-300 w-8 text-center text-xl">
-                                        {index + 1}
-                                    </div>
-                                    <div className="w-full md:w-40 h-48 md:h-24 rounded-xl overflow-hidden bg-black shadow-inner flex-shrink-0 relative group">
-                                        {item.type === 'video' ? (
-                                            <video src={item.media_url} className="w-full h-full object-cover" muted />
-                                        ) : (
-                                            <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${item.media_url})`}} />
-                                        )}
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                            <a href={item.media_url} target="_blank" className="text-white bg-white/20 p-2 rounded-full backdrop-blur-sm">🔗</a>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end md:items-center w-full">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Type</span>
-                                            <span className="font-bold text-gray-800 capitalize leading-none">{item.type}</span>
-                                        </div>
-
-                                        <div className="flex flex-col min-w-[120px]">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Group / Message</span>
-                                            <span className="font-bold text-blue-600 text-xs truncate max-w-[150px] font-bengali" title={item.group_title || 'No Group'}>
-                                                {item.group_title || '—'}
-                                            </span>
-                                        </div>
-
-                                        {item.type === 'image' ? (
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Duration</span>
-                                                <div className="flex items-center gap-1">
-                                                    <input 
-                                                        type="number" 
-                                                        className="w-16 p-1 border rounded font-bold focus:border-brand-blue outline-none text-center text-sm" 
-                                                        value={item.duration_seconds} 
-                                                        onChange={(e) => handleUpdateDuration(item.id, Number(e.target.value))} 
-                                                    />
-                                                    <span className="text-xs text-gray-400">sec</span>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Audio</span>
-                                                <button onClick={() => handleToggleSound(item.id, item.play_with_sound)} className={`text-[10px] font-black uppercase px-2 py-1 rounded-full w-max ${item.play_with_sound ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                                                    {item.play_with_sound ? '🔊 On' : '🔇 Muted'}
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Display</span>
-                                            <button onClick={() => handleToggleActive(item.id, item.is_active)} className={`text-[10px] font-black uppercase px-2 py-1 rounded-full w-max ${item.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                                                {item.is_active ? 'Active' : 'Paused'}
-                                            </button>
-                                        </div>
-
-                                        <div className="flex flex-col col-span-2 md:col-span-1 lg:col-span-2 md:items-end">
-                                            <button onClick={() => setItemToDelete(item)} className="w-full md:w-max text-red-500 hover:text-red-700 font-bold flex items-center justify-center gap-1 bg-red-50 px-4 py-2 rounded-xl transition-all text-sm">
-                                                🗑️ Delete
-                                            </button>
-                                        </div>
-                                    </div>
+                    ) : (
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="p-10 border-b border-white/10 flex justify-between items-center bg-slate-900 text-white animate-fade-in">
+                                <div className="flex items-center gap-6">
+                                    <button onClick={() => setSelectedGroup(null)} className="flex items-center gap-3 px-6 py-4 bg-white/10 hover:bg-red-500 rounded-2xl transition-all border border-white/10 font-bold text-xs"><span>←</span> LIST</button>
+                                    <div><h2 className="text-2xl font-black italic tracking-tighter uppercase">{selectedGroup}</h2></div>
                                 </div>
-                            ))}
+                            </div>
+                            
+                            <Reorder.Group axis="y" values={currentGroupItems} onReorder={handleItemReorder} className="w-full">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                            <tr>
+                                                <th className="px-10 py-5 w-24">SORT</th>
+                                                <th className="px-10 py-5">Visual</th>
+                                                <th className="px-10 py-5">Title / Subject</th>
+                                                <th className="px-10 py-5 text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {currentGroupItems.map((item) => (
+                                                <Reorder.Item key={item.id} value={item} as="tr" className="hover:bg-gray-50/50 transition-colors cursor-grab active:cursor-grabbing bg-white">
+                                                    <td className="px-10 py-5 text-slate-300 text-2xl font-black">⠿</td>
+                                                    <td className="px-10 py-5">
+                                                        <div className="w-20 h-12 bg-black rounded-xl overflow-hidden shadow-sm border-2 border-white"><img src={item.media_url} className="w-full h-full object-cover" /></div>
+                                                    </td>
+                                                    <td className="px-10 py-5 font-black text-slate-700 italic">{item.student_name || 'Individual Media'}</td>
+                                                    <td className="px-10 py-5 text-right">
+                                                        <div className="flex justify-end gap-3">
+                                                            <button onClick={() => setSchedulingItem(item)} className="w-10 h-10 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center text-xs">🕒</button>
+                                                            <button onClick={() => deleteMediaItem(item.id, item.media_url).then(loadData)} className="w-10 h-10 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">🗑️</button>
+                                                        </div>
+                                                    </td>
+                                                </Reorder.Item>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Reorder.Group>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
+
+            <AnimatePresence>
+                {/* UPLOAD MODAL */}
+                {isUploading && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/95 backdrop-blur-3xl z-[99999] flex items-center justify-center p-6 text-white text-center">
+                        <div className="space-y-6"><h3 className="text-5xl font-black italic tracking-tighter animate-pulse">UP: {uploadProgress}%</h3><div className="h-1 w-64 bg-white/10 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${uploadProgress}%` }} className="h-full bg-blue-500 shadow-[0_0_20px_blue]" /></div></div>
+                    </motion.div>
+                )}
+                {/* GROUP SELECTOR */}
+                {isGroupModalOpen && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[99998] flex items-center justify-center p-6 px-10">
+                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white rounded-[3rem] p-12 w-full max-w-lg shadow-2xl flex flex-col gap-6">
+                            <h3 className="text-2xl font-black text-slate-800 italic uppercase">Campaign Selection</h3>
+                            <select className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold outline-none" value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)}>
+                                <option value="">Choose Existing Group</option>
+                                {groupList.map(g => <option key={g} value={g}>{g}</option>)}
+                            </select>
+                            <input type="text" className="w-full p-5 border-2 border-gray-100 rounded-2xl font-black outline-none focus:border-blue-500" placeholder="Or New Group Name..." value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                <button onClick={() => setIsGroupModalOpen(false)} className="py-5 bg-gray-100 text-gray-500 rounded-[2rem] font-black uppercase text-xs">Cancel</button>
+                                <button onClick={handleFileSync} className="py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-xs shadow-xl">Apply & Upload</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 export default MediaManager;
-

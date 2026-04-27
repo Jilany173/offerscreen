@@ -45,6 +45,21 @@ export interface MediaItem {
   sort_order: number;
   group_id?: string;
   group_title?: string;
+  headline?: string;
+  headline_style?: 'minimal' | 'gradient' | 'bold';
+  qr_enabled?: boolean;
+  qr_text?: string;
+  is_campaign?: boolean;
+  start_date?: string;
+  end_date?: string;
+  start_time?: string;
+  end_time?: string;
+  active_days?: number[];
+  template_type?: string;
+  student_name?: string;
+  student_score?: string;
+  badge_text?: string;
+  group_id?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -40,6 +40,7 @@ export const createMediaItem = async (mediaItem: Omit<MediaItem, 'id' | 'created
         .single();
 
     if (error) {
+        alert("Database Error: " + error.message + "\n\nDid you run the SQL migration?");
         console.error('Error creating media item:', error);
         return null;
     }
@@ -90,10 +91,8 @@ export const deleteMediaItem = async (id: string, mediaUrl?: string): Promise<bo
 // Update order for drag-and-drop
 export const updateMediaOrder = async (items: MediaItem[]): Promise<boolean> => {
     const updates = items.map((item, index) => ({
-        id: item.id,
+        ...item,
         sort_order: index,
-        type: item.type,
-        media_url: item.media_url,
     }));
 
     const { error } = await supabase
@@ -146,29 +145,57 @@ export const deleteMediaFileFromServer = async (mediaUrl: string): Promise<boole
     }
 };
 
-// Utility to upload a file to cPanel via PHP script
-export const uploadMediaFile = async (file: File): Promise<string | null> => {
-    try {
+// Utility to upload a file to cPanel via PHP script with Progress Tracking
+export const uploadMediaFile = async (
+    file: File, 
+    onProgress?: (percent: number) => void
+): Promise<string | null> => {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(CPANEL_UPLOAD_URL, {
-            method: 'POST',
-            body: formData,
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable && onProgress) {
+                const percent = Math.round((event.loaded / event.total) * 100);
+                onProgress(percent);
+            }
         });
 
-        const result = await response.json();
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    if (result.status === 'success') {
+                        resolve(result.url);
+                    } else {
+                        alert("Upload Error: " + (result.message || "Unknown error"));
+                        resolve(null);
+                    }
+                } catch (e) {
+                    alert("Server Error: Invalid response format.");
+                    resolve(null);
+                }
+            } else {
+                alert("Upload failed with status: " + xhr.status);
+                resolve(null);
+            }
+        });
 
-        if (result.status === 'success') {
-            return result.url;
-        } else {
-            console.error('PHP Upload Error:', result.message);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error uploading file to cPanel:', error);
-        return null;
-    }
+        xhr.addEventListener('error', () => {
+            alert("Network Error: Could not connect to the upload server.");
+            resolve(null);
+        });
+
+        xhr.addEventListener('abort', () => {
+            resolve(null);
+        });
+
+        xhr.open('POST', CPANEL_UPLOAD_URL);
+        xhr.send(formData);
+
+        // Store reference if we need to cancel (optional expansion)
+    });
 };
 
 // Signage Settings
@@ -262,3 +289,16 @@ export const deleteTickerMessage = async (id: string): Promise<boolean> => {
     return true;
 };
 
+
+// System Health
+export const updateHeartbeat = async (): Promise<void> => {
+    await supabase
+        .from('system_health')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('id', 'main_display');
+};
+
+export const fetchSystemHealth = async (): Promise<{ last_seen: string } | null> => {
+    const { data } = await supabase.from('system_health').select('last_seen').eq('id', 'main_display').single();
+    return data;
+};
